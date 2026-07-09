@@ -1,2 +1,3 @@
 Pilot,Manufacturer,Model,Departure,Arrival,Distance,Flight Time,Fuel Needed,Fuel Cost
 Nabil,Airbus,A220-300,paris ,casablanca,1200.0,1.38,2640.0,5016.0
+Nabil,Airbus,A320,Paris,Casablanca,2100.0,2.54,5250.0,10500.0
