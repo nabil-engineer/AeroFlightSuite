@@ -2,6 +2,8 @@
 
 ![Python](https://img.shields.io/badge/Python-3.13-blue?logo=python) ![Git](https://img.shields.io/badge/Git-Version_Control-orange?logo=git) ![GitHub](https://img.shields.io/badge/GitHub-Repository-black?logo=github) ![License](https://img.shields.io/badge/License-MIT-green)
 
+> 🚀 This project is part of my Software Engineering & AI portfolio.
+
 ### Professional Flight Management System developed with Python
 
 AeroFlight Suite is a Python-based application designed to simulate and manage flight operations through a clean and modular architecture.
