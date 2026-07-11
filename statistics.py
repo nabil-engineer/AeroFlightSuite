@@ -13,7 +13,12 @@ def show_statistics():
 
         reader = csv.reader(file)
 
+        next(reader, None)
+
         for row in reader:
+
+            if len(row) < 9:
+              continue
 
             total_flights += 1
 

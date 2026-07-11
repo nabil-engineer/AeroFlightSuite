@@ -1,5 +1,6 @@
 from menu import run_menu
 
-run_menu()
+if __name__ == "__main__":
+    run_menu()
 
-
+    
