@@ -9,23 +9,28 @@ def show_statistics():
     total_fuel_needed = 0
     total_fuel_cost = 0
 
-    with open("data/flights.csv", "r", encoding="utf-8") as file:
+    try:
+        with open("data/flights.csv", "r", encoding="utf-8") as file:
 
-        reader = csv.reader(file)
+            reader = csv.reader(file)
 
-        next(reader, None)
+            next(reader, None)
 
-        for row in reader:
+            for row in reader:
 
-            if len(row) < 9:
-              continue
+                if len(row) < 9:
+                    continue
 
-            total_flights += 1
+                total_flights += 1
 
-            total_distance += float(row[5])
-            total_flight_time += float(row[6])
-            total_fuel_needed += float(row[7])
-            total_fuel_cost += float(row[8])
+                total_distance += float(row[5])
+                total_flight_time += float(row[6])
+                total_fuel_needed += float(row[7])
+                total_fuel_cost += float(row[8])
+
+    except FileNotFoundError:
+        print("\nNo statistics available.")
+        return
 
     if total_flights > 0:
         average_flight_time = total_flight_time / total_flights
@@ -44,3 +49,4 @@ def show_statistics():
     print(f"Total Fuel Cost     : {total_fuel_cost:.2f} €")
 
     print("=" * 60)
+    

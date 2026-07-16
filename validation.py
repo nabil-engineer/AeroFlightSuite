@@ -1,9 +1,11 @@
+def validate_not_empty(value):
+    return value.strip() != ""
+
 def validate_pilot_name(name):
-    return name.strip() != ""
+    return validate_not_empty(name)
 
 def validate_city_name(city):
-
-    return city.strip() != ""
+    return validate_not_empty(city)
 
 def validate_positive_number(value):
 
@@ -37,7 +39,19 @@ def get_city_name(message):
 
             return city
 
-        print("City name cannot be empty.")            
+        print("City name cannot be empty.") 
+
+def get_pilot_name(message):
+
+    while True:
+
+        pilot = input(message).strip()
+
+        if validate_pilot_name(pilot):
+
+            return pilot
+
+        print("Pilot name cannot be empty.")
 
 def get_aircraft_choice(aircrafts):
 

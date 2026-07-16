@@ -31,28 +31,7 @@ def run_menu():
 
         elif menu_choice == "2":
 
-         while True:
-
-          show_aircraft_database()
-
-          print("\n1. Search Aircraft")
-          print("2. Return to Main Menu")
-
-          choice = input("\nChoose an option: ")
-
-          if choice == "1":
-
-            search_aircraft()
-
-            input("\nPress Enter to continue...")
-
-          elif choice == "2":
-
-            break
-
-          else:
-
-            print("\nInvalid choice.")
+            aircraft_database_menu()
 
                
 
@@ -79,3 +58,28 @@ def run_menu():
             print("\nInvalid choice.")
 
             input("Press Enter to continue...")
+
+def aircraft_database_menu():
+
+    while True:
+
+        show_aircraft_database()
+
+        print("\n1. Search Aircraft")
+        print("2. Return to Main Menu")
+
+        choice = input("\nChoose an option: ")
+
+        if choice == "1":
+
+            search_aircraft()
+
+            input("\nPress Enter to continue...")
+
+        elif choice == "2":
+
+            break
+
+        else:
+
+            print("\nInvalid choice.")            

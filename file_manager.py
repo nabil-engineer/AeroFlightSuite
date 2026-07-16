@@ -12,6 +12,8 @@ def save_flight(
     fuel_needed,
     fuel_cost
 ):
+    os.makedirs("data", exist_ok=True)
+    
     file_exists = os.path.exists("data/flights.csv")
 
     with open("data/flights.csv", "a", newline="", encoding="utf-8") as file:

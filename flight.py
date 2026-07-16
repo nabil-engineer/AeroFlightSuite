@@ -5,7 +5,7 @@ from calculator import (
 )
 
 from validation import (
-    validate_pilot_name,
+    get_pilot_name,
     validate_positive_number,
     get_positive_number,
     get_city_name,
@@ -90,11 +90,7 @@ def get_aircraft_information(selected_aircraft):
 
 def get_flight_information():
 
-    pilot = input("\nPilot Name: ")
-
-    while not validate_pilot_name(pilot):
-        print("Pilot name cannot be empty.")
-        pilot = input("Pilot Name: ")
+    pilot = get_pilot_name("\nPilot Name: ")
 
     departure_city = get_city_name("Departure City: ")
 
