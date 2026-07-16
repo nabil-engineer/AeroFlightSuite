@@ -1,21 +1,30 @@
 from flight import new_flight
 from history import show_history
 from statistics import show_statistics
-from database import show_aircraft_database, search_aircraft
+from status_manager import update_flight_status
+from delete_manager import delete_flight
+from database import (
+    show_aircraft_database,
+    search_aircraft,
+    show_airport_database,
+    search_airport,
+)
+from config import APP_NAME, LINE_SMALL
 
 def show_main_menu():
-
-    print("\n" + "=" * 60)
-    print("           AEROFLIGHT SUITE")
-    print("=" * 60)
-
+    print("\n" + "=" * LINE_SMALL)
+    print(f"{APP_NAME:^60}")
+    print("=" * LINE_SMALL)
     print("1. New Flight")
     print("2. Aircraft Database")
-    print("3. Flight History")
-    print("4. Statistics")
-    print("5. Exit")
+    print("3. Airport Database")
+    print("4. Flight History")
+    print("5. Statistics")
+    print("6. Update Flight Status")
+    print("7. Delete Flight")
+    print("8. Exit")
+    print("=" * LINE_SMALL)
 
-    print("=" * 60)
 
 def run_menu():
 
@@ -33,22 +42,36 @@ def run_menu():
 
             aircraft_database_menu()
 
-               
-
         elif menu_choice == "3":
+
+            airport_database_menu() 
+
+        elif menu_choice == "4":
 
             show_history()
 
             input("\nPress Enter to return to the menu...")
 
-        elif menu_choice == "4":
+        elif menu_choice == "5":
 
             show_statistics()
 
             input("\nPress Enter to return to the menu...")
 
-        elif menu_choice == "5":
+        elif menu_choice == "6":
 
+            update_flight_status()
+
+            input("\nPress Enter to continue...")
+
+        elif menu_choice == "7":
+
+            delete_flight()
+
+            input("\nPress Enter to continue...")
+
+        elif menu_choice == "8":
+            
             print("\nThank you for using AeroFlight Suite.")
 
             break
@@ -83,3 +106,23 @@ def aircraft_database_menu():
         else:
 
             print("\nInvalid choice.")            
+
+
+def airport_database_menu():
+    while True:
+        show_airport_database()
+
+        print("\n1. Search Airport")
+        print("2. Return to Main Menu")
+
+        choice = input("\nChoose an option: ")
+
+        if choice == "1":
+            search_airport()
+            input("\nPress Enter to continue...")
+
+        elif choice == "2":
+            break
+
+        else:
+            print("\nInvalid choice.")

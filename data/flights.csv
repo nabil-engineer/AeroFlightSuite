@@ -1,4 +1,2 @@
-Nabil,Airbus,A320,Paris,Casablanca,1200.0,1.45,3000.0,6300.0
-Nabil,Airbus,A320,Casablanca,Paris,1200.0,1.45,3000.0,6300.0
-Nabil,Airbus,A330neo,Paris,Casablanca,1300.0,1.48,6110.0,12831.0
-Nabil,Boeing,737-800,Rabat,Nice,2000.0,2.38,5000.0,12000.0
+Flight Number,Flight Date,Pilot,Manufacturer,Model,Departure,Arrival,Distance,Flight Time,Fuel Needed,Fuel Cost,Status
+A2X101,2026-07-19,Nabil,ATR,ATR 42-600,Rabat,Paris,1797.2,3.23,2156.64,4960.27,Scheduled

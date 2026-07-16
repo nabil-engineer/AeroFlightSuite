@@ -1,11 +1,12 @@
 from aircraft_data import aircrafts
-
+from airport_data import airports
+from config import LINE_MEDIUM, LINE_XLARGE
 
 def show_aircraft_database():
 
-    print("\n" + "=" * 95)
+    print("\n" + "=" * LINE_MEDIUM)
     print(" " * 32 + "AIRCRAFT DATABASE")
-    print("=" * 95)
+    print("=" * LINE_MEDIUM)
 
     print(
         f"{'No':<5}"
@@ -15,7 +16,7 @@ def show_aircraft_database():
         f"{'Fuel(L/km)':<15}"
     )
 
-    print("-" * 95)
+    print("-" * LINE_MEDIUM)
 
     for number, aircraft in aircrafts.items():
 
@@ -27,15 +28,15 @@ def show_aircraft_database():
             f"{aircraft['fuel_consumption']:<15}"
         )
 
-    print("=" * 95)
+    print("=" * LINE_MEDIUM)
 
 def search_aircraft():
 
     keyword = input("\nSearch (Manufacturer or Model): ").lower()
 
-    print("\n" + "=" * 95)
-    print("SEARCH RESULTS")
-    print("=" * 95)
+    print("=" * LINE_MEDIUM)
+    print(f"{'SEARCH RESULTS':^{LINE_MEDIUM}}")
+    print("=" * LINE_MEDIUM)
 
     found = False
 
@@ -60,4 +61,58 @@ def search_aircraft():
 
         print("No aircraft found.")
 
-    print("=" * 95)    
+    print("=" * LINE_MEDIUM)
+
+
+def show_airport_database():
+
+    print("\n" + "=" * LINE_XLARGE)
+    print(f"{'AIRPORT DATABASE':^{LINE_XLARGE}}")
+    print("=" * LINE_XLARGE)
+
+    print(f"{'Code':<8}" f"{'Airport':<35}" f"{'City':<20}" f"{'Country':<20}")
+
+    print("-" * LINE_XLARGE)
+
+    for code, airport in airports.items():
+
+        print(
+            f"{code:<8}"
+            f"{airport['name']:<40}"
+            f"{airport['city']:<20}"
+            f"{airport['country']:<20}"
+        )
+    print("=" * LINE_XLARGE)
+
+
+def search_airport():
+    keyword = input("\nSearch (Code, Airport, City or Country): ").lower()
+
+    print("=" * LINE_MEDIUM)
+    print("SEARCH RESULTS")
+    print("=" * LINE_MEDIUM)
+
+    found = False
+
+    for code, airport in airports.items():
+
+        if (
+            keyword in code.lower()
+            or keyword in airport["name"].lower()
+            or keyword in airport["city"].lower()
+            or keyword in airport["country"].lower()
+        ):
+
+            found = True
+
+            print(
+                f"{code:<8}"
+                f"{airport['name']:<35}"
+                f"{airport['city']:<20}"
+                f"{airport['country']:<20}"
+            )
+
+    if not found:
+        print("No airport found.")
+
+    print("=" * LINE_XLARGE)

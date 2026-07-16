@@ -69,4 +69,17 @@ def get_aircraft_choice(aircrafts):
 
         except ValueError:
 
-            print("Please enter a valid integer.")        
+            print("Please enter a valid integer.")    
+
+
+def get_airport_code(airports, message):
+
+    while True:
+
+        code = input(message).upper().strip()
+
+        if code in airports:
+
+            return code
+
+        print("Airport code not found.")
