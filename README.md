@@ -143,6 +143,76 @@ python main.py
 
 ---
 
+## 🗺️ Project Roadmap
+
+### ✅ Version 1.0 — Flight Management System
+
+- Aircraft Database
+- Flight Creation
+- Flight History
+- Flight Statistics
+- Fuel Consumption Calculator
+- Fuel Cost Estimation
+- CSV Storage
+
+---
+
+### 🔄 Version 2.0 — Flight Planner
+
+- Flight Number
+- Flight Date
+- Departure Airport
+- Arrival Airport
+- Route Information
+- Automatic Distance Calculation
+
+---
+
+### 🔄 Version 3.0 — Database Upgrade
+
+- SQLite Database
+- Advanced Search
+- Flight Filtering
+- Data Management
+
+---
+
+### 🔄 Version 4.0 — Professional GUI
+
+- Tkinter Interface
+- Dashboard
+- Charts
+- Better User Experience
+
+---
+
+### 🔄 Version 5.0 — Web Application
+
+- Flask
+- Responsive Interface
+- REST API
+- User Authentication
+
+---
+
+### 🔄 Version 6.0 — Aviation Services
+
+- Weather Integration
+- Airport Database
+- PDF Flight Reports
+- Interactive Maps
+
+---
+
+### 🔄 Version 7.0 — Artificial Intelligence
+
+- AI Flight Assistant
+- Fuel Consumption Prediction
+- Route Optimization
+- Flight Data Analysis
+
+---
+
 ## 👨‍💻 Author
 
 **Nabil Elouizi**
