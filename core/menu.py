@@ -1,15 +1,15 @@
-from flight import new_flight
-from history import show_history
-from statistics import show_statistics
+from core.flight import new_flight
+from core.history import show_history
+from core.statistics import show_statistics
 from status_manager import update_flight_status
 from delete_manager import delete_flight
-from database import (
+from core.database import (
     show_aircraft_database,
     search_aircraft,
     show_airport_database,
     search_airport,
 )
-from config import APP_NAME, LINE_SMALL
+from config.config import APP_NAME, LINE_SMALL
 
 def show_main_menu():
     print("\n" + "=" * LINE_SMALL)

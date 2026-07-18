@@ -51,13 +51,20 @@ The application enables users to:
 ## ✨ Features
 
 - ✔ Aircraft Database
+- ✔ Airport Database
+- ✔ Flight Creation
 - ✔ Flight Calculator
+- ✔ Automatic Route Distance Calculation
 - ✔ Fuel Consumption Calculator
-- ✔ Fuel Cost Estimation
+- ✔ Fuel Cost Calculation
 - ✔ Flight Reports
 - ✔ Flight History
 - ✔ Flight Statistics
 - ✔ Aircraft Search
+- ✔ Airport Search
+- ✔ Flight Status Management
+- ✔ Flight Deletion
+- ✔ CSV Database
 - ✔ Input Validation
 
 ---
@@ -78,26 +85,43 @@ The application enables users to:
 ```text
 AeroFlightSuite/
 
+AeroFlightSuite/
+│
+├── core/
+│   ├── menu.py
+│   ├── flight.py
+│   ├── history.py
+│   ├── statistics.py
+│   └── database.py
+│
+├── managers/
+│   ├── file_manager.py
+│   ├── search_manager.py
+│   ├── status_manager.py
+│   └── delete_manager.py
+│
+├── models/
+│   └── flight_model.py
+│
+├── utils/
+│   ├── calculator.py
+│   ├── validation.py
+│   └── route_calculator.py
+│
 ├── data/
+│   ├── aircraft_data.py
+│   ├── airport_data.py
 │   └── flights.csv
+│
+├── config/
+│   └── config.py
 │
 ├── screenshots/
 │
-├── aircraft_data.py
-├── calculator.py
-├── database.py
-├── file_manager.py
-├── flight.py
-├── flight_model.py
-├── history.py
 ├── main.py
-├── menu.py
-├── statistics.py
-├── validation.py
-│
 ├── README.md
-├── requirements.txt
 ├── LICENSE
+├── requirements.txt
 └── .gitignore
 ```
 
@@ -131,14 +155,20 @@ python main.py
 
 ## 🚀 Future Improvements
 
-- Professional Graphical User Interface (GUI)
+- SQLite Database Integration
+- Advanced Flight Search & Filtering
+- Export Flight Reports (PDF & Excel)
+- Professional Graphical User Interface (Tkinter)
 - Web Version (Flask)
-- SQLite Database
+- User Authentication & Login System
+- Weather API Integration
+- Interactive Airport Maps
+- Dashboard with Charts & Analytics
 - REST API
-- Airport Database
-- Weather Integration
-- PDF Flight Reports
+- Docker Deployment
 - AI Flight Assistant
+- Fuel Consumption Prediction
+- Intelligent Route Optimization
 - Flight Data Analysis
 
 ---
@@ -152,55 +182,62 @@ python main.py
 - Flight History
 - Flight Statistics
 - Fuel Consumption Calculator
-- Fuel Cost Estimation
+- Fuel Cost Calculation
 - CSV Storage
 
 ---
 
-### 🔄 Version 2.0 — Flight Planner
+### ✅ Version 2.0 — Flight Planner
 
-- Flight Number
-- Flight Date
-- Departure Airport
-- Arrival Airport
-- Route Information
-- Automatic Distance Calculation
+- Airport Database
+- Automatic Route Distance Calculation
+- Flight Number & Flight Date
+- Flight Status Management
+- Flight Search
+- Flight Deletion
+- Aircraft Search
+- Airport Search
+- Modular Project Architecture
 
 ---
 
-### 🔄 Version 3.0 — Database Upgrade
+### 🔄 Version 3.0 — Professional Database System
 
-- SQLite Database
-- Advanced Search
+- SQLite Database Integration
+- CRUD Operations (Create, Read, Update, Delete)
+- Advanced Flight Search
 - Flight Filtering
-- Data Management
+- Flight Sorting
+- Database Backup & Restore
+- Data Validation Improvements
 
 ---
 
-### 🔄 Version 4.0 — Professional GUI
+### 🔄 Version 4.0 — Professional Desktop GUI
 
-- Tkinter Interface
+- Tkinter User Interface
 - Dashboard
-- Charts
-- Better User Experience
+- Icons & Images
+- Charts & Analytics
+- Improved User Experience
 
 ---
 
 ### 🔄 Version 5.0 — Web Application
 
-- Flask
+- Flask Web Application
 - Responsive Interface
-- REST API
 - User Authentication
+- REST API
 
 ---
 
 ### 🔄 Version 6.0 — Aviation Services
 
-- Weather Integration
-- Airport Database
+- Weather API Integration
+- Interactive Airport Maps
 - PDF Flight Reports
-- Interactive Maps
+- Excel Export
 
 ---
 
@@ -208,7 +245,7 @@ python main.py
 
 - AI Flight Assistant
 - Fuel Consumption Prediction
-- Route Optimization
+- Intelligent Route Optimization
 - Flight Data Analysis
 
 ---

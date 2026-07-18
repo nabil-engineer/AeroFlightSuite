@@ -1,7 +1,6 @@
 import csv
 
-from config import CSV_FILE
-
+from config.config import CSV_FILE
 
 def update_flight_status():
     print("\n======================================")
@@ -50,7 +49,6 @@ def update_flight_status():
        updated_rows.append(header)
 
        for row in reader:
-        print(row)
 
         if row[0] == flight_number:
             row[11] = new_status

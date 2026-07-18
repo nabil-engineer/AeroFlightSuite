@@ -1,6 +1,6 @@
 import csv
 
-from config import LINE_LARGE, CSV_FILE
+from config.config import LINE_LARGE, CSV_FILE
 
 def show_history():
     print("\n")

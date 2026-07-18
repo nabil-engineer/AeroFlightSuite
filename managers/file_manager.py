@@ -1,8 +1,7 @@
 import csv
 import os
 
-from config import CSV_FILE
-
+from config.config import CSV_FILE
 
 def save_flight(
     flight_number,

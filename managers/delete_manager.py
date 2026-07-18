@@ -1,7 +1,6 @@
 import csv
 
-from config import CSV_FILE
-
+from config.config import CSV_FILE
 
 def delete_flight():
     print("\n======================================")

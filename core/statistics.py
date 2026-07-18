@@ -1,5 +1,5 @@
 import csv
-from config import CSV_FILE, LINE_SMALL
+from config.config import CSV_FILE, LINE_SMALL
 
 def show_statistics():
 

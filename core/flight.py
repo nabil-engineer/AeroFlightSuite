@@ -1,22 +1,22 @@
-from calculator import (
+from utils.calculator import (
     calculate_flight_time,
     calculate_fuel_needed,
-    calculate_fuel_cost
+    calculate_fuel_cost,
 )
 
-from validation import (
+from utils.validation import (
     get_pilot_name,
     get_positive_number,
     get_aircraft_choice,
     get_airport_code,
 )
 
-from aircraft_data import aircrafts
-from airport_data import airports
-from route_calculator import calculate_distance
-from file_manager import save_flight
-from flight_model import Flight
-from config import LINE_SMALL
+from data.aircraft_data import aircrafts
+from data.airport_data import airports
+from utils.route_calculator import calculate_distance
+from managers.file_manager import save_flight
+from models.flight_model import Flight
+from config.config import LINE_SMALL
 
 def display_aircrafts():
 
@@ -187,8 +187,6 @@ def calculate_flight(distance, speed, fuel_consumption, fuel_price):
 def print_report(flight):
 
     print("\n" + "=" * LINE_SMALL)
-    print(f"{'FLIGHT REPORT':^{LINE_SMALL}}")
-    print("=" * LINE_SMALL)
     print(f"{'FLIGHT REPORT':^{LINE_SMALL}}")
     print("=" * LINE_SMALL)
     print(f"Flight Number  : {flight.flight_number}")

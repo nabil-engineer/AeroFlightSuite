@@ -1,7 +1,6 @@
 import csv
 
-from config import CSV_FILE, LINE_LARGE
-
+from config.config import CSV_FILE, LINE_LARGE
 
 def search_flight():
     print("\n" + "=" * LINE_LARGE)

@@ -1,6 +1,6 @@
-from aircraft_data import aircrafts
-from airport_data import airports
-from config import LINE_MEDIUM, LINE_XLARGE
+from data.aircraft_data import aircrafts
+from data.airport_data import airports
+from config.config import LINE_MEDIUM, LINE_XLARGE
 
 def show_aircraft_database():
 
