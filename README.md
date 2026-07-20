@@ -15,7 +15,8 @@ The application enables users to:
 - Calculate flight duration.
 - Estimate fuel consumption.
 - Calculate fuel costs.
-- Store flight reports in CSV format.
+- Store flight records in SQLite database.
+- Create SQLite database backups.
 - View flight history.
 - Display flight statistics.
 - Search aircraft by manufacturer or model.
@@ -50,21 +51,31 @@ The application enables users to:
 
 ## ✨ Features
 
-- ✔ Aircraft Database
-- ✔ Airport Database
 - ✔ Flight Creation
-- ✔ Flight Calculator
-- ✔ Automatic Route Distance Calculation
-- ✔ Fuel Consumption Calculator
-- ✔ Fuel Cost Calculation
-- ✔ Flight Reports
 - ✔ Flight History
 - ✔ Flight Statistics
-- ✔ Aircraft Search
-- ✔ Airport Search
+- ✔ Flight Search
+- ✔ Advanced Flight Search
+- ✔ Flight Filtering
+- ✔ Flight Sorting
 - ✔ Flight Status Management
 - ✔ Flight Deletion
-- ✔ CSV Database
+- ✔ Professional Flight Report
+
+- ✔ Aircraft Database
+- ✔ Aircraft Search
+
+- ✔ Airport Database
+- ✔ Airport Search
+
+- ✔ Automatic Route Distance Calculation
+- ✔ Automatic Distance Calculation using Haversine Formula
+- ✔ Fuel Consumption Calculator
+- ✔ Fuel Cost Calculator
+
+- ✔ SQLite Database
+- ✔ SQLite Backup
+
 - ✔ Input Validation
 
 ---
@@ -72,9 +83,10 @@ The application enables users to:
 ## 🛠 Technologies
 
 - Python 3
+- SQLite3
+- Python Standard Library
 - Object-Oriented Programming (OOP)
 - Modular Programming
-- CSV Database
 - Git
 - GitHub
 
@@ -84,39 +96,59 @@ The application enables users to:
 
 ```text
 AeroFlightSuite/
-
-AeroFlightSuite/
-│
-├── core/
-│   ├── menu.py
-│   ├── flight.py
-│   ├── history.py
-│   ├── statistics.py
-│   └── database.py
-│
-├── managers/
-│   ├── file_manager.py
-│   ├── search_manager.py
-│   ├── status_manager.py
-│   └── delete_manager.py
-│
-├── models/
-│   └── flight_model.py
-│
-├── utils/
-│   ├── calculator.py
-│   ├── validation.py
-│   └── route_calculator.py
-│
-├── data/
-│   ├── aircraft_data.py
-│   ├── airport_data.py
-│   └── flights.csv
 │
 ├── config/
 │   └── config.py
 │
+├── core/
+│   ├── catalog.py
+│   ├── flight.py
+│   ├── history.py
+│   ├── menu.py
+│   └── statistics.py
+│
+├── database/
+│   ├── __init__.py
+│   ├── backup_manager.py
+│   ├── common.py
+│   ├── create_queries.py
+│   ├── delete_queries.py
+│   ├── read_queries.py
+│   ├── update_queries.py
+│   └── database_manager.py
+│
+├── data/
+│   ├── aircraft_data.py
+│   ├── airport_data.py
+│   └── flights.db
+│
+├── managers/
+│   ├── delete_manager.py
+│   ├── file_manager.py
+│   ├── search_manager.py
+│   └── status_manager.py
+│
+├── models/
+│   └── flight_model.py
+│
+├── services/
+│   └── flight_service.py
+│
+├── utils/
+│   ├── calculator.py
+│   ├── display.py
+│   ├── route_calculator.py
+│   └── validation.py
+│
 ├── screenshots/
+│   ├── aircraft-database.png
+│   ├── airport-database.png
+│   ├── history.png
+│   ├── main-menu.png
+│   ├── new-flight.png
+│   └── statistics.png
+│
+├── backup/
 │
 ├── main.py
 ├── README.md
@@ -125,7 +157,6 @@ AeroFlightSuite/
 └── .gitignore
 ```
 
----
 
 ## 🚀 Installation
 
@@ -141,7 +172,31 @@ Go to the project folder:
 cd AeroFlightSuite
 ```
 
----
+Create a virtual environment (optional):
+
+```bash
+python -m venv venv
+```
+
+Activate it:
+
+**Windows**
+
+```bash
+venv\Scripts\activate
+```
+
+**Linux / macOS**
+
+```bash
+source venv/bin/activate
+```
+
+Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
 
 ## ▶️ How to Run
 
@@ -155,8 +210,6 @@ python main.py
 
 ## 🚀 Future Improvements
 
-- SQLite Database Integration
-- Advanced Flight Search & Filtering
 - Export Flight Reports (PDF & Excel)
 - Professional Graphical User Interface (Tkinter)
 - Web Version (Flask)
@@ -183,7 +236,7 @@ python main.py
 - Flight Statistics
 - Fuel Consumption Calculator
 - Fuel Cost Calculation
-- CSV Storage
+- CSV Storage (Legacy)
 
 ---
 
@@ -201,14 +254,14 @@ python main.py
 
 ---
 
-### 🔄 Version 3.0 — Professional Database System
+### ✅ Version 3.0 — Professional Database System
 
 - SQLite Database Integration
-- CRUD Operations (Create, Read, Update, Delete)
+- Complete CRUD System (Create, Read, Update, Delete)
 - Advanced Flight Search
 - Flight Filtering
 - Flight Sorting
-- Database Backup & Restore
+- Database Backup 
 - Data Validation Improvements
 
 ---
@@ -261,10 +314,10 @@ Python Developer
 AI & Aerospace Enthusiast
 
 🌐 Portfolio:
-https://nabil-engineer.github.io/nabil-portfolio/
+<https://nabil-engineer.github.io/nabil-portfolio/>
 
 💻 GitHub:
-https://github.com/nabil-engineer
+<https://github.com/nabil-engineer>
 
 ---
 

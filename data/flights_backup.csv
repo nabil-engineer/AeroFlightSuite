@@ -1,3 +1,4 @@
 Flight Number,Flight Date,Pilot,Manufacturer,Model,Departure,Arrival,Distance,Flight Time,Fuel Needed,Fuel Cost,Status
 A2X101,2026-07-19,Nabil,ATR,ATR 42-600,Rabat,Paris,1797.2,3.23,2156.64,4960.27,Scheduled
 N200A52,2026-07-17,Nabil,Boeing,777-200ER,Rabat,Paris,1831.3,2.02,12819.1,35893.48,Scheduled
+A600J91,2026-07-19,Nabil,Dassault,Falcon 2000,Tangier,Madrid,568.91,0.63,1479.17,2218.75,Scheduled

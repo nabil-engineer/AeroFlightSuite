@@ -19,6 +19,7 @@ class Flight:
         fuel_cost,
         status,
     ):
+
         self.flight_number = flight_number
         self.flight_date = flight_date
         self.pilot = pilot
@@ -40,11 +41,32 @@ class Flight:
         return f"{self.manufacturer} {self.model}"
 
     def route(self):
-
         return (
-        f"{self.departure_city}"
-        f" ({self.departure_code})"
-        " -> "
-        f"{self.arrival_city}"
-        f" ({self.arrival_code})"
-      )
+            f"{self.departure_city} ({self.departure_code})"
+            f" -> "
+            f"{self.arrival_city} ({self.arrival_code})"
+        )
+
+    def to_tuple(self):
+        return (
+            self.flight_number,
+            self.flight_date,
+            self.pilot,
+            self.manufacturer,
+            self.model,
+            self.departure_code,
+            self.departure_city,
+            self.arrival_code,
+            self.arrival_city,
+            self.distance,
+            self.speed,
+            self.fuel_price,
+            self.flight_time,
+            self.fuel_needed,
+            self.fuel_cost,
+            self.status,
+        )
+
+
+    def __str__(self):
+        return f"{self.flight_number} - {self.route()}"

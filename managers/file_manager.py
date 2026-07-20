@@ -1,62 +1,23 @@
-import csv
-import os
+from database.database_manager import insert_flight
 
-from config.config import CSV_FILE
 
-def save_flight(
-    flight_number,
-    flight_date,
-    pilot,
-    manufacturer,
-    model,
-    departure_city,
-    arrival_city,
-    distance,
-    flight_time,
-    fuel_needed,
-    fuel_cost,
-    status,
-):
-    os.makedirs("data", exist_ok=True)
+def save_flight(flight):
 
-    file_exists = os.path.exists(CSV_FILE)
-
-    with open(CSV_FILE, "a", newline="", encoding="utf-8") as file:
-
-        writer = csv.writer(file)
-
-        if not file_exists:
-
-            writer.writerow(
-                [
-                    "Flight Number",
-                    "Flight Date",
-                    "Pilot",
-                    "Manufacturer",
-                    "Model",
-                    "Departure",
-                    "Arrival",
-                    "Distance",
-                    "Flight Time",
-                    "Fuel Needed",
-                    "Fuel Cost",
-                    "Status",
-                ]
-            )
-
-        writer.writerow(
-            [
-                flight_number,
-                flight_date,
-                pilot,
-                manufacturer,
-                model,
-                departure_city,
-                arrival_city,
-                distance,
-                round(flight_time, 2),
-                round(fuel_needed, 2),
-                round(fuel_cost, 2),
-                status,
-            ]
-        )
+    insert_flight(
+        flight.flight_number,
+        flight.flight_date,
+        flight.pilot,
+        flight.manufacturer,
+        flight.model,
+        flight.departure_code,
+        flight.departure_city,
+        flight.arrival_code,
+        flight.arrival_city,
+        flight.distance,
+        flight.speed,
+        flight.fuel_price,
+        flight.flight_time,
+        flight.fuel_needed,
+        flight.fuel_cost,
+        flight.status,
+    )

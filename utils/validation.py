@@ -1,85 +1,105 @@
-def validate_not_empty(value):
-    return value.strip() != ""
+import re
+from datetime import datetime
 
-def validate_pilot_name(name):
-    return validate_not_empty(name)
+from config.config import (
+    DATE_FORMAT,
+    FLIGHT_NUMBER_PATTERN,
+)
 
-def validate_city_name(city):
-    return validate_not_empty(city)
+# ==========================================================
+# VALIDATION FUNCTIONS
+# ==========================================================
 
-def validate_positive_number(value):
 
-    return value > 0
+def validate_flight_number(flight_number):
+    return re.match(FLIGHT_NUMBER_PATTERN, flight_number) is not None
+
+
+# ==========================================================
+# INPUT FUNCTIONS
+# ==========================================================
+
+
+def get_flight_date():
+    while True:
+        date = input("Flight Date (YYYY-MM-DD): ").strip()
+
+        try:
+            datetime.strptime(date, DATE_FORMAT)
+            return date
+        except ValueError:
+            print("Invalid date format.")
+
 
 def get_positive_number(message):
-
     while True:
 
         try:
-
             value = float(input(message))
 
-            if validate_positive_number(value):
-
+            if value > 0:
                 return value
 
             print("Value must be greater than zero.")
 
         except ValueError:
+            print("Invalid number.")
 
-            print("Please enter a valid number.")
-
-def get_city_name(message):
-
-    while True:
-
-        city = input(message).strip()
-
-        if validate_city_name(city):
-
-            return city
-
-        print("City name cannot be empty.") 
 
 def get_pilot_name(message):
-
     while True:
 
-        pilot = input(message).strip()
+        name = input(message).strip()
 
-        if validate_pilot_name(pilot):
-
-            return pilot
+        if name:
+            return name.title()
 
         print("Pilot name cannot be empty.")
+
 
 def get_aircraft_choice(aircrafts):
 
     while True:
 
+        for number, aircraft in aircrafts.items():
+
+            print(f"{number}. " f"{aircraft['manufacturer']} " f"{aircraft['model']}")
+
         try:
 
-            choice = int(input("\nChoose an aircraft (1-50): "))
+            choice = int(input("\nChoose Aircraft: "))
 
             if choice in aircrafts:
-
                 return choice
 
-            print("Please choose a number between 1 and 50.")
-
         except ValueError:
+            pass
 
-            print("Please enter a valid integer.")    
+        print("Invalid aircraft selection.")
 
 
 def get_airport_code(airports, message):
 
     while True:
 
-        code = input(message).upper().strip()
+        code = input(message).strip().upper()
 
         if code in airports:
-
             return code
 
         print("Airport code not found.")
+
+
+def get_arrival_airport(airports, departure_code):
+
+    while True:
+
+        arrival = get_airport_code(
+            airports,
+            "Arrival Airport: ",
+        )
+
+        if arrival != departure_code:
+            return arrival
+
+        print("Departure and arrival airports cannot be the same.")

@@ -1,52 +1,143 @@
-import csv
+from config.config import LINE_LARGE
+from utils.display import (
+    print_title,
+    display_flights_table,
+)
+from database.database_manager import (
+    search_flights,
+    advanced_search,
+    filter_flights,
+    sort_flights,
+    backup_database,
+)
 
-from config.config import CSV_FILE, LINE_LARGE
+
+def show_results(title, flights):
+    print_title(title, LINE_LARGE)
+    display_flights_table(flights)
+
+
+def show_menu(title, options):
+    print_title(title, LINE_LARGE)
+
+    for key, value in options.items():
+        print(f"{key}. {value}")
+
 
 def search_flight():
-    print("\n" + "=" * LINE_LARGE)
-    print("SEARCH FLIGHT")
-    print("=" * LINE_LARGE)
 
-    keyword = input("\nSearch by Flight Number or Pilot Name: ").strip().lower()
+    keyword = input("\nSearch (Flight, Pilot, Aircraft, Route, Status): ").strip()
 
-    found = False
+    if not keyword:
+        print("\nSearch cannot be empty.")
+        return
 
-    try:
-        with open(CSV_FILE, "r", encoding="utf-8") as file:
-            reader = csv.reader(file)
+    show_results(
+        "SEARCH RESULTS",
+        search_flights(keyword),
+    )
 
-            next(reader, None)
 
-            print(
-                f"\n{'Flight':<12}"
-                f"{'Pilot':<15}"
-                f"{'Aircraft':<25}"
-                f"{'Route':<25}"
-            )
+def advanced_flight_search():
 
-            print("-" * LINE_LARGE)
+    filters = {
+        "flight_number": input("Flight Number: ").strip(),
+        "pilot": input("Pilot Name: ").strip(),
+        "aircraft": input("Aircraft: ").strip(),
+        "departure": input("Departure City: ").strip(),
+        "arrival": input("Arrival City: ").strip(),
+        "status": input("Status: ").strip(),
+    }
 
-            for row in reader:
+    show_results(
+        "ADVANCED SEARCH",
+        advanced_search(**filters),
+    )
 
-                flight_number = row[0]
-                pilot = row[2]
 
-                if keyword in flight_number.lower() or keyword in pilot.lower():
+def filter_menu():
 
-                    aircraft = row[3] + " " + row[4]
-                    route = row[5] + " -> " + row[6]
+    options = {
+        "1": "Status",
+        "2": "Distance",
+        "3": "Back",
+    }
 
-                    print(
-                        f"{flight_number:<12}"
-                        f"{pilot:<15}"
-                        f"{aircraft:<25}"
-                        f"{route:<25}"
-                    )
+    show_menu("FLIGHT FILTER", options)
 
-                    found = True
+    choice = input("\nChoose option: ")
 
-        if not found:
-            print("\nNo flight found.")
+    if choice == "1":
 
-    except FileNotFoundError:
-        print("\nNo flight history found.")
+        flights = filter_flights(
+            "status",
+            input("Status: ").strip(),
+        )
+
+    elif choice == "2":
+
+        try:
+            distance = float(input("Minimum Distance: "))
+
+        except ValueError:
+            print("Invalid number.")
+            return
+
+        flights = filter_flights(
+            "distance",
+            distance,
+        )
+
+    elif choice == "3":
+        return
+
+    else:
+        print("Invalid choice.")
+        return
+
+    show_results(
+        "FILTER RESULTS",
+        flights,
+    )
+
+
+def sort_menu():
+
+    options = {
+        "1": ("Date", "date"),
+        "2": ("Distance", "distance"),
+        "3": ("Fuel Cost", "cost"),
+        "4": ("Pilot", "pilot"),
+        "5": ("Back", None),
+    }
+
+    while True:
+
+        show_menu(
+            "SORT FLIGHTS",
+            {key: value[0] for key, value in options.items()},
+        )
+
+        choice = input("\nChoose option: ")
+
+        if choice == "5":
+            return
+
+        if choice not in options:
+            print("Invalid choice.")
+            continue
+
+        show_results(
+            "SORT RESULTS",
+            sort_flights(options[choice][1]),
+        )
+
+
+def backup_menu():
+
+    print_title(
+        "DATABASE BACKUP",
+        LINE_LARGE,
+    )
+
+    backup_database()

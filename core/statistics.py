@@ -1,48 +1,20 @@
-import csv
-from config.config import CSV_FILE, LINE_SMALL
+from config.config import LINE_SMALL
+from utils.display import print_title
+from database.database_manager import get_statistics
+
 
 def show_statistics():
+    statistics = get_statistics()
 
-    total_flights = 0
-    total_distance = 0
-    total_flight_time = 0
-    total_fuel_needed = 0
-    total_fuel_cost = 0
+    total_flights = statistics[0] or 0
+    total_distance = statistics[1] or 0
+    total_flight_time = statistics[2] or 0
+    total_fuel_needed = statistics[3] or 0
+    total_fuel_cost = statistics[4] or 0
 
-    try:
-        with open(CSV_FILE, "r", encoding="utf-8") as file:
+    average_flight_time = total_flight_time / total_flights if total_flights else 0
 
-            reader = csv.reader(file)
-
-            next(reader, None)
-
-            for row in reader:
-
-                if len(row) < 11:
-                    continue
-
-                total_flights += 1
-
-                total_distance += float(row[7])
-                total_flight_time += float(row[8])
-                total_fuel_needed += float(row[9])
-                total_fuel_cost += float(row[10])
-
-    except FileNotFoundError:
-        print("\nNo statistics available.")
-        return
-    except Exception as error:
-        print(f"\nUnexpected error: {error}")
-        return
-
-    if total_flights > 0:
-        average_flight_time = total_flight_time / total_flights
-    else:
-        average_flight_time = 0
-
-    print("\n" + "=" * LINE_SMALL)
-    print(f"{'FLIGHT STATISTICS':^{LINE_SMALL}}")
-    print("=" * LINE_SMALL)
+    print_title("FLIGHT STATISTICS", LINE_SMALL)
 
     print(f"Total Flights       : {total_flights}")
     print(f"Total Distance      : {total_distance:.2f} km")

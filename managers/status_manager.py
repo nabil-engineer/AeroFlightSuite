@@ -1,67 +1,30 @@
-import csv
+from config.config import FLIGHT_STATUSES
+from database.database_manager import update_status
 
-from config.config import CSV_FILE
 
 def update_flight_status():
     print("\n======================================")
     print("       UPDATE FLIGHT STATUS")
     print("======================================")
 
-    flight_number = input("\nFlight Number: ").strip()
+    flight_number = input("\nFlight Number: ").strip().upper()
 
     print("\nAvailable Status:")
-
-    print("1. Scheduled")
-    print("2. Boarding")
-    print("3. Delayed")
-    print("4. Departed")
-    print("5. Arrived")
-    print("6. Cancelled")
+    for key, status in FLIGHT_STATUSES.items():
+        print(f"{key}. {status}")
 
     choice = input("\nChoose Status: ")
 
-    status_list = {
-        "1": "Scheduled",
-        "2": "Boarding",
-        "3": "Delayed",
-        "4": "Departed",
-        "5": "Arrived",
-        "6": "Cancelled",
-    }
-
-    if choice not in status_list:
+    if choice not in FLIGHT_STATUSES:
         print("\nInvalid status.")
         return
 
-    new_status = status_list[choice]
+    affected = update_status(
+        flight_number,
+        FLIGHT_STATUSES[choice],
+    )
 
-    print(f"\nFlight : {flight_number}")
-    print(f"New Status : {new_status}")
-
-    updated_rows = []
-    flight_found = False
-
-    with open(CSV_FILE, "r", encoding="utf-8") as file:
-       reader = csv.reader(file)
-
-       header = next(reader)
-       
-       updated_rows.append(header)
-
-       for row in reader:
-
-        if row[0] == flight_number:
-            row[11] = new_status
-            flight_found = True
-
-        updated_rows.append(row)
-
-        if not flight_found:
-          print("\nFlight not found.")
-          return
-        
-        with open(CSV_FILE, "w", newline="", encoding="utf-8") as file:
-          writer = csv.writer(file)
-          writer.writerows(updated_rows)
-
-        print("\nFlight status updated successfully.")    
+    if affected == 0:
+        print("\nFlight not found.")
+    else:
+        print("\nFlight status updated successfully.")

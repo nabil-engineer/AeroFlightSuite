@@ -1,8 +1,8 @@
-import csv
+from database.database_manager import delete_flight_database
 
-from config.config import CSV_FILE
 
 def delete_flight():
+
     print("\n======================================")
     print("         DELETE FLIGHT")
     print("======================================")
@@ -17,29 +17,9 @@ def delete_flight():
         print("\nOperation cancelled.")
         return
 
-    updated_rows = []
-    flight_found = False
+    affected = delete_flight_database(flight_number)
 
-    with open(CSV_FILE, "r", encoding="utf-8") as file:
-        reader = csv.reader(file)
-
-        header = next(reader)
-        updated_rows.append(header)
-
-        for row in reader:
-
-            if row[0] == flight_number:
-                flight_found = True
-                continue
-
-            updated_rows.append(row)
-
-    if not flight_found:
+    if affected == 0:
         print("\nFlight not found.")
-        return
-
-    with open(CSV_FILE, "w", newline="", encoding="utf-8") as file:
-        writer = csv.writer(file)
-        writer.writerows(updated_rows)
-
-    print("\nFlight deleted successfully.")
+    else:
+        print("\nFlight deleted successfully.")

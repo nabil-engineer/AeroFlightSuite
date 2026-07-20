@@ -1,59 +1,50 @@
-from utils.calculator import (
-    calculate_flight_time,
-    calculate_fuel_needed,
-    calculate_fuel_cost,
-)
-
-from utils.validation import (
-    get_pilot_name,
-    get_positive_number,
-    get_aircraft_choice,
-    get_airport_code,
-)
-
+from config.config import LINE_SMALL
+from utils.display import print_title
 from data.aircraft_data import aircrafts
 from data.airport_data import airports
-from utils.route_calculator import calculate_distance
+from database.database_manager import flight_exists
 from managers.file_manager import save_flight
-from models.flight_model import Flight
-from config.config import LINE_SMALL
-
-def display_aircrafts():
-
-    print("Available Aircraft:\n")
-
-    for number, aircraft in aircrafts.items():
-        print(f"{number}. {aircraft['manufacturer']} {aircraft['model']}")
+from services.flight_service import create_flight
+from utils.route_calculator import calculate_distance
+from utils.validation import (
+    get_aircraft_choice,
+    get_airport_code,
+    get_arrival_airport,
+    get_flight_date,
+    get_pilot_name,
+    get_positive_number,
+    validate_flight_number,
+)
 
 def select_aircraft():
+    """
+    Return the selected aircraft.
+    """
+    return aircrafts[get_aircraft_choice(aircrafts)]
 
-    choice = get_aircraft_choice(aircrafts)
-
-    return aircrafts[choice]
 
 def new_flight():
-
     print("\nStarting a new flight...\n")
 
-    display_aircrafts()
-
-    selected_aircraft = select_aircraft()
-
-    (
-    manufacturer,
-    model,
-    speed,
-    fuel_consumption
-    ) = get_aircraft_information(selected_aircraft)
+    aircraft = select_aircraft()
 
     display_aircraft_information(
-        manufacturer,
-        model,
-        speed,
-        fuel_consumption,
+        aircraft["manufacturer"],
+        aircraft["model"],
+        aircraft["speed"],
+        aircraft["fuel_consumption"],
     )
 
+    flight = build_flight(aircraft)
+
+    print_report(flight)
+
+    save_report(flight)
+
+
+def build_flight(aircraft):
     flight_number, flight_date = get_flight_details()
+
     (
         pilot,
         departure_code,
@@ -63,50 +54,23 @@ def new_flight():
         distance,
         fuel_price,
     ) = get_flight_information()
-    flight_time, fuel_needed, fuel_cost = calculate_flight(
-        distance,
-        speed,
-        fuel_consumption,
-        fuel_price,
-    )
 
-    status = "Scheduled"
-    flight = Flight(
+    return create_flight(
         flight_number,
         flight_date,
         pilot,
-        manufacturer,
-        model,
+        aircraft,
         departure_code,
         departure_city,
         arrival_code,
         arrival_city,
         distance,
-        speed,
         fuel_price,
-        flight_time,
-        fuel_needed,
-        fuel_cost,
-        status,
     )
-    print_report(flight)
-
-    save_report(flight)
-
-
-def get_aircraft_information(selected_aircraft):
-
-    manufacturer = selected_aircraft["manufacturer"]
-    model = selected_aircraft["model"]
-    speed = selected_aircraft["speed"]
-    fuel_consumption = selected_aircraft["fuel_consumption"]
-
-    return manufacturer, model, speed, fuel_consumption  
 
 
 def display_aircraft_information(manufacturer, model, speed, fuel_consumption):
-    print("\nAircraft Selected")
-    print("------------------------")
+    print_title("AIRCRAFT SELECTED", LINE_SMALL)
     print(f"Manufacturer : {manufacturer}")
     print(f"Model        : {model}")
     print(f"Speed        : {speed} km/h")
@@ -114,18 +78,25 @@ def display_aircraft_information(manufacturer, model, speed, fuel_consumption):
 
 
 def get_flight_details():
+
     print("\nFlight Information")
     print("------------------------")
 
-    flight_number = input("Flight Number: ").strip()
-    while not flight_number:
-        print("Flight number cannot be empty.")
-        flight_number = input("Flight Number: ").strip()
+    while True:
 
-    flight_date = input("Flight Date (YYYY-MM-DD): ").strip()
-    while not flight_date:
-        print("Flight date cannot be empty.")
-        flight_date = input("Flight Date (YYYY-MM-DD): ").strip()
+        flight_number = input("Flight Number: ").strip().upper()
+
+        if not validate_flight_number(flight_number):
+            print("Invalid flight number format (example: AT123).")
+            continue
+
+        if flight_exists(flight_number):
+            print("Flight number already exists.")
+            continue
+
+        break
+
+    flight_date = get_flight_date()
 
     return flight_number, flight_date
 
@@ -141,21 +112,20 @@ def get_flight_information():
 
     departure_code = get_airport_code(airports, "\nDeparture Airport: ")
 
-    arrival_code = get_airport_code(airports, "Arrival Airport: ")
+    arrival_code = get_arrival_airport(
+        airports,
+        departure_code,
+    )
 
     departure_city = airports[departure_code]["city"]
 
     arrival_city = airports[arrival_code]["city"]
 
-    departure_airport = airports[departure_code]
-
-    arrival_airport = airports[arrival_code]
-
     distance = calculate_distance(
-       departure_airport["latitude"],
-       departure_airport["longitude"],
-       arrival_airport["latitude"],
-       arrival_airport["longitude"]
+        airports[departure_code]["latitude"],
+        airports[departure_code]["longitude"],
+        airports[arrival_code]["latitude"],
+        airports[arrival_code]["longitude"],
     )
 
     print(f"\nCalculated Distance : {distance:.2f} km")
@@ -170,25 +140,13 @@ def get_flight_information():
         arrival_city,
         distance,
         fuel_price,
-    )
-
-
-def calculate_flight(distance, speed, fuel_consumption, fuel_price):
-
-    flight_time = calculate_flight_time(distance, speed)
-
-    fuel_needed = calculate_fuel_needed(distance, fuel_consumption)
-
-    fuel_cost = calculate_fuel_cost(fuel_needed, fuel_price)
-
-    return flight_time, fuel_needed, fuel_cost   
+    )  
 
 
 def print_report(flight):
 
-    print("\n" + "=" * LINE_SMALL)
-    print(f"{'FLIGHT REPORT':^{LINE_SMALL}}")
-    print("=" * LINE_SMALL)
+    print_title("FLIGHT REPORT", LINE_SMALL)
+
     print(f"Flight Number  : {flight.flight_number}")
     print(f"Flight Date    : {flight.flight_date}")
     print(f"Pilot          : {flight.pilot}")
@@ -210,21 +168,10 @@ def print_report(flight):
 
     print("=" * LINE_SMALL)
 
+
 def save_report(flight):
-
-    save_flight(
-        flight.flight_number,
-        flight.flight_date,
-        flight.pilot,
-        flight.manufacturer,
-        flight.model,
-        flight.departure_city,
-        flight.arrival_city,
-        flight.distance,
-        flight.flight_time,
-        flight.fuel_needed,
-        flight.fuel_cost,
-        flight.status,
-    )
-
-    print("\nFlight saved successfully.")
+    try:
+        save_flight(flight)
+        print("\nFlight saved successfully.")
+    except ValueError as error:
+        print(f"\nError: {error}")
