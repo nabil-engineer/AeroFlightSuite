@@ -1,25 +1,108 @@
+"""
+AeroFlight Suite
+Route Calculation Utilities
+
+Provides geographic calculations used by the
+flight route and distance services.
+"""
+
+from math import atan2
+from math import cos
 from math import radians
 from math import sin
-from math import cos
 from math import sqrt
-from math import atan2
 
-EARTH_RADIUS = 6371
+from config.config import EARTH_RADIUS_KM
+from utils.validation import (
+    validate_latitude,
+    validate_longitude,
+)
 
 
-def calculate_distance(lat1, lon1, lat2, lon2):
+def calculate_distance(
+    lat1,
+    lon1,
+    lat2,
+    lon2,
+):
+    """
+    Calculate the great-circle distance between
+    two geographic coordinates using the Haversine formula.
 
-    lat1 = radians(lat1)
-    lon1 = radians(lon1)
+    Parameters
+    ----------
+    lat1 : float
+        Latitude of the departure airport in degrees.
 
-    lat2 = radians(lat2)
-    lon2 = radians(lon2)
+    lon1 : float
+        Longitude of the departure airport in degrees.
 
-    dlat = lat2 - lat1
-    dlon = lon2 - lon1
+    lat2 : float
+        Latitude of the arrival airport in degrees.
 
-    a = sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2
+    lon2 : float
+        Longitude of the arrival airport in degrees.
 
-    c = 2 * atan2(sqrt(a), sqrt(1 - a))
+    Returns
+    -------
+    float
+        Distance between the two points in kilometers,
+        rounded according to DECIMAL_PRECISION.
 
-    return round(EARTH_RADIUS * c, 2)
+    Raises
+    ------
+    ValueError
+        If any coordinate is outside its valid geographic range.
+    """
+
+    lat1 = validate_latitude(
+        lat1,
+    )
+
+    lon1 = validate_longitude(
+        lon1,
+    )
+
+    lat2 = validate_latitude(
+        lat2,
+    )
+
+    lon2 = validate_longitude(
+        lon2,
+    )
+
+    latitude_1 = radians(lat1)
+    longitude_1 = radians(lon1)
+
+    latitude_2 = radians(lat2)
+    longitude_2 = radians(lon2)
+
+    delta_latitude = latitude_2 - latitude_1
+    delta_longitude = longitude_2 - longitude_1
+
+    haversine_value = (
+        sin(delta_latitude / 2) ** 2
+        + cos(latitude_1) * cos(latitude_2) * sin(delta_longitude / 2) ** 2
+    )
+
+    # Protect against extremely small floating-point
+    # errors that could make the value slightly exceed 1.
+    haversine_value = min(
+        1.0,
+        max(
+            0.0,
+            haversine_value,
+        ),
+    )
+
+    central_angle = 2 * atan2(
+        sqrt(haversine_value),
+        sqrt(1 - haversine_value),
+    )
+
+    distance = EARTH_RADIUS_KM * central_angle
+
+    return round(
+        distance,
+        2,
+    )

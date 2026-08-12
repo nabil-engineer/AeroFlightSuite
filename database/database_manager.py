@@ -1,8 +1,10 @@
 """
 AeroFlight Suite
 Database Package
+Central database API.
 
-This module re-exports all database operations.
+This module exposes the complete public database interface
+by combining the specialized query modules.
 """
 
 from .create_queries import (
@@ -22,6 +24,9 @@ from .read_queries import (
 
 from .update_queries import (
     update_status,
+    update_weather,
+    update_flight_cost,
+    update_distance,
 )
 
 from .delete_queries import (
@@ -33,8 +38,10 @@ from .backup_manager import (
 )
 
 __all__ = [
+    # Create
     "create_database",
     "insert_flight",
+    # Read
     "flight_exists",
     "get_all_flights",
     "search_flights",
@@ -42,7 +49,13 @@ __all__ = [
     "filter_flights",
     "sort_flights",
     "get_statistics",
+    # Update
     "update_status",
+    "update_weather",
+    "update_flight_cost",
+    "update_distance",
+    # Delete
     "delete_flight_database",
+    # Backup
     "backup_database",
 ]

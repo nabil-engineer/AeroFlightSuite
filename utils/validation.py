@@ -1,63 +1,308 @@
+"""
+AeroFlight Suite
+Validation Utilities
+
+Centralized validation and user-input helpers.
+
+Responsibilities
+----------------
+This module provides:
+
+1. Domain validators
+   - Validate already collected values.
+   - Raise ValueError when invalid.
+
+2. Interactive input helpers
+   - Collect values from the console.
+   - Keep asking until valid input is provided.
+
+Design rule
+-----------
+Business logic does not belong here.
+
+This module validates, normalizes, and collects
+user input only.
+"""
+
 import re
 from datetime import datetime
 
 from config.config import (
     DATE_FORMAT,
     FLIGHT_NUMBER_PATTERN,
+    WIND_DIRECTIONS,
+    MIN_TEMPERATURE,
+    MAX_TEMPERATURE,
+    MAX_WIND_SPEED,
+    MIN_PRESSURE,
+    MAX_PRESSURE,
+    MAX_VISIBILITY,
+    MIN_WEATHER_FACTOR,
 )
 
 # ==========================================================
-# VALIDATION FUNCTIONS
+# GENERIC VALIDATION
 # ==========================================================
 
 
-def validate_flight_number(flight_number):
-    return re.match(FLIGHT_NUMBER_PATTERN, flight_number) is not None
+def validate_numeric_range(
+    value,
+    minimum,
+    maximum,
+    field_name,
+):
+    """
+    Validate a numeric value inside an inclusive range.
+
+    Returns
+    -------
+    float
+        Normalized numeric value.
+
+    Raises
+    ------
+    ValueError
+        If the value is not numeric or outside the range.
+    """
+
+    try:
+        normalized_value = float(value)
+
+    except (
+        TypeError,
+        ValueError,
+    ) as error:
+
+        raise ValueError(f"{field_name} must be a number.") from error
+
+    if not (minimum <= normalized_value <= maximum):
+
+        raise ValueError(f"{field_name} must be between " f"{minimum} and {maximum}.")
+
+    return normalized_value
+
+
+def validate_positive_value(
+    value,
+    field_name,
+):
+    """
+    Validate that a numeric value is greater than zero.
+
+    Returns
+    -------
+    float
+        Normalized positive value.
+    """
+
+    try:
+        normalized_value = float(value)
+
+    except (
+        TypeError,
+        ValueError,
+    ) as error:
+
+        raise ValueError(f"{field_name} must be a number.") from error
+
+    if normalized_value <= 0:
+
+        raise ValueError(f"{field_name} must be greater than zero.")
+
+    return normalized_value
 
 
 # ==========================================================
-# INPUT FUNCTIONS
+# GEOGRAPHIC VALIDATION
+# ==========================================================
+
+
+def validate_latitude(
+    value,
+):
+    """
+    Validate latitude.
+
+    Latitude range:
+        -90 to 90 degrees.
+    """
+
+    return validate_numeric_range(
+        value,
+        -90,
+        90,
+        "Latitude",
+    )
+
+
+def validate_longitude(
+    value,
+):
+    """
+    Validate longitude.
+
+    Longitude range:
+        -180 to 180 degrees.
+    """
+
+    return validate_numeric_range(
+        value,
+        -180,
+        180,
+        "Longitude",
+    )
+
+
+# ==========================================================
+# FLIGHT NUMBER
+# ==========================================================
+
+
+def validate_flight_number(
+    flight_number,
+):
+    """
+    Validate a flight number.
+
+    Returns
+    -------
+    bool
+        True when valid, otherwise False.
+    """
+
+    if not isinstance(
+        flight_number,
+        str,
+    ):
+        return False
+
+    normalized_flight_number = flight_number.strip().upper()
+
+    if not normalized_flight_number:
+        return False
+
+    return (
+        re.fullmatch(
+            FLIGHT_NUMBER_PATTERN,
+            normalized_flight_number,
+        )
+        is not None
+    )
+
+
+# ==========================================================
+# DATE
+# ==========================================================
+
+
+def validate_flight_date(
+    flight_date,
+):
+    """
+    Validate and normalize a flight date.
+
+    Returns
+    -------
+    str
+        Validated date string.
+
+    Raises
+    ------
+    ValueError
+        If the date is invalid.
+    """
+
+    if not isinstance(
+        flight_date,
+        str,
+    ):
+
+        raise ValueError("Flight date must be a string.")
+
+    normalized_date = flight_date.strip()
+
+    if not normalized_date:
+
+        raise ValueError("Flight date cannot be empty.")
+
+    try:
+
+        datetime.strptime(
+            normalized_date,
+            DATE_FORMAT,
+        )
+
+    except ValueError as error:
+
+        raise ValueError("Invalid flight date.") from error
+
+    return normalized_date
+
+
+# ==========================================================
+# INTERACTIVE FLIGHT INPUTS
 # ==========================================================
 
 
 def get_flight_date():
+    """
+    Ask the user for a valid flight date.
+    """
+
     while True:
-        date = input("Flight Date (YYYY-MM-DD): ").strip()
+
+        value = input("Flight Date (YYYY-MM-DD): ").strip()
 
         try:
-            datetime.strptime(date, DATE_FORMAT)
-            return date
+
+            return validate_flight_date(
+                value,
+            )
+
         except ValueError:
+
             print("Invalid date format.")
 
 
-def get_positive_number(message):
+def get_positive_number(
+    message,
+    minimum=0.0,
+):
+    """
+    Ask the user for a numeric value
+    greater than the supplied minimum.
+    """
+
     while True:
 
         try:
-            value = float(input(message))
 
-            if value > 0:
-                return value
-
-            print("Value must be greater than zero.")
+            value = float(input(message).strip())
 
         except ValueError:
-            print("Invalid number.")
+
+            print("Please enter a valid numeric value.")
+
+            continue
+
+        if value > minimum:
+
+            return value
+
+        print(f"Value must be greater than " f"{minimum}.")
 
 
-def get_pilot_name(message):
-    while True:
-
-        name = input(message).strip()
-
-        if name:
-            return name.title()
-
-        print("Pilot name cannot be empty.")
+# ==========================================================
+# AIRCRAFT / AIRPORT SELECTION
+# ==========================================================
 
 
-def get_aircraft_choice(aircrafts):
+def get_aircraft_choice(
+    aircrafts,
+):
+    """
+    Ask the user to select an aircraft.
+    """
 
     while True:
 
@@ -67,30 +312,57 @@ def get_aircraft_choice(aircrafts):
 
         try:
 
-            choice = int(input("\nChoose Aircraft: "))
-
-            if choice in aircrafts:
-                return choice
+            choice = int(input("\nChoose Aircraft: ").strip())
 
         except ValueError:
-            pass
+
+            choice = None
+
+        if choice in aircrafts:
+
+            return choice
 
         print("Invalid aircraft selection.")
 
 
-def get_airport_code(airports, message):
+def get_airport_code(
+    airports,
+    message,
+):
+    """
+    Ask for a valid airport code.
+
+    The returned code is always uppercase.
+    """
 
     while True:
 
         code = input(message).strip().upper()
 
         if code in airports:
+
             return code
 
         print("Airport code not found.")
 
 
-def get_arrival_airport(airports, departure_code):
+def get_arrival_airport(
+    airports,
+    departure_code,
+):
+    """
+    Ask for an arrival airport that differs
+    from the departure airport.
+    """
+
+    normalized_departure = (
+        departure_code.strip().upper()
+        if isinstance(
+            departure_code,
+            str,
+        )
+        else departure_code
+    )
 
     while True:
 
@@ -99,7 +371,320 @@ def get_arrival_airport(airports, departure_code):
             "Arrival Airport: ",
         )
 
-        if arrival != departure_code:
+        if arrival != normalized_departure:
+
             return arrival
 
-        print("Departure and arrival airports cannot be the same.")
+        print("Departure and arrival airports " "cannot be the same.")
+
+
+# ==========================================================
+# WEATHER VALIDATION
+# ==========================================================
+
+
+def validate_temperature(
+    value,
+):
+    """
+    Validate temperature in Celsius.
+    """
+
+    return validate_numeric_range(
+        value,
+        MIN_TEMPERATURE,
+        MAX_TEMPERATURE,
+        "Temperature",
+    )
+
+
+def validate_wind_speed(
+    value,
+):
+    """
+    Validate wind speed.
+
+    Zero wind speed is allowed.
+    """
+
+    return validate_numeric_range(
+        value,
+        0,
+        MAX_WIND_SPEED,
+        "Wind speed",
+    )
+
+
+def validate_pressure(
+    value,
+):
+    """
+    Validate atmospheric pressure.
+    """
+
+    return validate_numeric_range(
+        value,
+        MIN_PRESSURE,
+        MAX_PRESSURE,
+        "Pressure",
+    )
+
+
+def validate_humidity(
+    value,
+):
+    """
+    Validate humidity percentage.
+    """
+
+    return validate_numeric_range(
+        value,
+        0,
+        100,
+        "Humidity",
+    )
+
+
+def validate_visibility(
+    value,
+):
+    """
+    Validate visibility.
+
+    Visibility must be greater than zero
+    and cannot exceed MAX_VISIBILITY.
+    """
+
+    try:
+
+        normalized_value = float(value)
+
+    except (
+        TypeError,
+        ValueError,
+    ) as error:
+
+        raise ValueError("Visibility must be a number.") from error
+
+    if normalized_value <= 0:
+
+        raise ValueError("Visibility must be greater than 0.")
+
+    if normalized_value > MAX_VISIBILITY:
+
+        raise ValueError(f"Visibility must be between " f"0 and {MAX_VISIBILITY}.")
+
+    return normalized_value
+
+
+def validate_weather_factor(
+    value,
+):
+    """
+    Validate weather factor.
+    """
+
+    try:
+
+        normalized_value = float(value)
+
+    except (
+        TypeError,
+        ValueError,
+    ) as error:
+
+        raise ValueError("Weather factor must be a number.") from error
+
+    if normalized_value < MIN_WEATHER_FACTOR:
+
+        raise ValueError("Weather factor cannot be below " f"{MIN_WEATHER_FACTOR}.")
+
+    return normalized_value
+
+
+def validate_wind_direction(
+    value,
+):
+    """
+    Validate a wind-direction value.
+
+    Accepts:
+    - configured numeric key
+    - configured textual value
+    """
+
+    if value in WIND_DIRECTIONS:
+
+        return WIND_DIRECTIONS[value]
+
+    if value in WIND_DIRECTIONS.values():
+
+        return value
+
+    raise ValueError("Invalid wind direction.")
+
+
+# ==========================================================
+# INTERACTIVE WEATHER INPUTS
+# ==========================================================
+
+
+def get_wind_direction():
+    """
+    Ask the user to select wind direction.
+    """
+
+    while True:
+
+        print("\nWind Direction")
+
+        for key, value in WIND_DIRECTIONS.items():
+
+            print(f"{key}. {value}")
+
+        choice = input("\nChoose Direction: ").strip()
+
+        try:
+
+            return validate_wind_direction(
+                choice,
+            )
+
+        except ValueError:
+
+            print("Invalid choice.")
+
+
+def get_temperature():
+    """
+    Ask for a valid temperature.
+    """
+
+    while True:
+
+        try:
+
+            value = float(input("Temperature (°C): ").strip())
+
+            return validate_temperature(
+                value,
+            )
+
+        except ValueError as error:
+
+            print(error)
+
+
+def get_wind_speed():
+    """
+    Ask for a valid wind speed.
+    """
+
+    while True:
+
+        try:
+
+            value = float(input("Wind Speed (km/h): ").strip())
+
+            return validate_wind_speed(
+                value,
+            )
+
+        except ValueError as error:
+
+            print(error)
+
+
+def get_pressure():
+    """
+    Ask for valid atmospheric pressure.
+    """
+
+    while True:
+
+        try:
+
+            value = float(input("Pressure (hPa): ").strip())
+
+            return validate_pressure(
+                value,
+            )
+
+        except ValueError as error:
+
+            print(error)
+
+
+def get_visibility():
+    """
+    Ask for valid visibility.
+    """
+
+    while True:
+
+        try:
+
+            value = float(input("Visibility (km): ").strip())
+
+            return validate_visibility(
+                value,
+            )
+
+        except ValueError as error:
+
+            print(error)
+
+
+def get_humidity():
+    """
+    Ask for valid humidity.
+    """
+
+    while True:
+
+        try:
+
+            value = float(input("Humidity (%): ").strip())
+
+            return validate_humidity(
+                value,
+            )
+
+        except ValueError as error:
+
+            print(error)
+
+
+# ==========================================================
+# GENERIC INPUT
+# ==========================================================
+
+
+def get_input(
+    prompt,
+    upper=False,
+):
+    """
+    Read and normalize generic user input.
+
+    Parameters
+    ----------
+    prompt : str
+        Input prompt.
+
+    upper : bool
+        Convert the result to uppercase.
+
+    Returns
+    -------
+    str
+        Cleaned user input.
+    """
+
+    value = input(prompt).strip()
+
+    if upper:
+
+        value = value.upper()
+
+    return value

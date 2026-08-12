@@ -1,4 +1,4 @@
-# AeroFlight Suite v1.0
+# AeroFlight Suite v4.0
 
-# This project currently uses only Python Standard Library.
-# No external dependencies are required.
+# This project uses only the Python Standard Library.
+# No external Python packages are required.
