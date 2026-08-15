@@ -2,23 +2,22 @@
 AeroFlight Suite
 Validation Utilities
 
+Version 5.0
+
 Centralized validation and user-input helpers.
 
 Responsibilities
 ----------------
-This module provides:
-
-1. Domain validators
-   - Validate already collected values.
-   - Raise ValueError when invalid.
-
-2. Interactive input helpers
-   - Collect values from the console.
-   - Keep asking until valid input is provided.
+1. Domain validation
+2. Interactive console input
+3. Aircraft / airport validation
+4. Weather validation
+5. Runway validation
+6. Runway performance input validation
 
 Design rule
 -----------
-Business logic does not belong here.
+Business calculations do not belong here.
 
 This module validates, normalizes, and collects
 user input only.
@@ -68,15 +67,10 @@ def validate_numeric_range(
     try:
         normalized_value = float(value)
 
-    except (
-        TypeError,
-        ValueError,
-    ) as error:
-
+    except (TypeError, ValueError) as error:
         raise ValueError(f"{field_name} must be a number.") from error
 
     if not (minimum <= normalized_value <= maximum):
-
         raise ValueError(f"{field_name} must be between " f"{minimum} and {maximum}.")
 
     return normalized_value
@@ -98,16 +92,36 @@ def validate_positive_value(
     try:
         normalized_value = float(value)
 
-    except (
-        TypeError,
-        ValueError,
-    ) as error:
-
+    except (TypeError, ValueError) as error:
         raise ValueError(f"{field_name} must be a number.") from error
 
     if normalized_value <= 0:
-
         raise ValueError(f"{field_name} must be greater than zero.")
+
+    return normalized_value
+
+
+def validate_non_negative_value(
+    value,
+    field_name,
+):
+    """
+    Validate that a numeric value is zero or greater.
+
+    Returns
+    -------
+    float
+        Normalized numeric value.
+    """
+
+    try:
+        normalized_value = float(value)
+
+    except (TypeError, ValueError) as error:
+        raise ValueError(f"{field_name} must be a number.") from error
+
+    if normalized_value < 0:
+        raise ValueError(f"{field_name} cannot be negative.")
 
     return normalized_value
 
@@ -117,9 +131,7 @@ def validate_positive_value(
 # ==========================================================
 
 
-def validate_latitude(
-    value,
-):
+def validate_latitude(value):
     """
     Validate latitude.
 
@@ -135,9 +147,7 @@ def validate_latitude(
     )
 
 
-def validate_longitude(
-    value,
-):
+def validate_longitude(value):
     """
     Validate longitude.
 
@@ -158,9 +168,7 @@ def validate_longitude(
 # ==========================================================
 
 
-def validate_flight_number(
-    flight_number,
-):
+def validate_flight_number(flight_number):
     """
     Validate a flight number.
 
@@ -195,9 +203,7 @@ def validate_flight_number(
 # ==========================================================
 
 
-def validate_flight_date(
-    flight_date,
-):
+def validate_flight_date(flight_date):
     """
     Validate and normalize a flight date.
 
@@ -216,24 +222,20 @@ def validate_flight_date(
         flight_date,
         str,
     ):
-
         raise ValueError("Flight date must be a string.")
 
     normalized_date = flight_date.strip()
 
     if not normalized_date:
-
         raise ValueError("Flight date cannot be empty.")
 
     try:
-
         datetime.strptime(
             normalized_date,
             DATE_FORMAT,
         )
 
     except ValueError as error:
-
         raise ValueError("Invalid flight date.") from error
 
     return normalized_date
@@ -250,17 +252,14 @@ def get_flight_date():
     """
 
     while True:
-
         value = input("Flight Date (YYYY-MM-DD): ").strip()
 
         try:
-
             return validate_flight_date(
                 value,
             )
 
         except ValueError:
-
             print("Invalid date format.")
 
 
@@ -274,19 +273,14 @@ def get_positive_number(
     """
 
     while True:
-
         try:
-
             value = float(input(message).strip())
 
         except ValueError:
-
             print("Please enter a valid numeric value.")
-
             continue
 
         if value > minimum:
-
             return value
 
         print(f"Value must be greater than " f"{minimum}.")
@@ -297,9 +291,7 @@ def get_positive_number(
 # ==========================================================
 
 
-def get_aircraft_choice(
-    aircrafts,
-):
+def get_aircraft_choice(aircrafts):
     """
     Ask the user to select an aircraft.
     """
@@ -307,19 +299,15 @@ def get_aircraft_choice(
     while True:
 
         for number, aircraft in aircrafts.items():
-
             print(f"{number}. " f"{aircraft['manufacturer']} " f"{aircraft['model']}")
 
         try:
-
             choice = int(input("\nChoose Aircraft: ").strip())
 
         except ValueError:
-
             choice = None
 
         if choice in aircrafts:
-
             return choice
 
         print("Invalid aircraft selection.")
@@ -340,7 +328,6 @@ def get_airport_code(
         code = input(message).strip().upper()
 
         if code in airports:
-
             return code
 
         print("Airport code not found.")
@@ -372,7 +359,6 @@ def get_arrival_airport(
         )
 
         if arrival != normalized_departure:
-
             return arrival
 
         print("Departure and arrival airports " "cannot be the same.")
@@ -383,9 +369,7 @@ def get_arrival_airport(
 # ==========================================================
 
 
-def validate_temperature(
-    value,
-):
+def validate_temperature(value):
     """
     Validate temperature in Celsius.
     """
@@ -398,9 +382,7 @@ def validate_temperature(
     )
 
 
-def validate_wind_speed(
-    value,
-):
+def validate_wind_speed(value):
     """
     Validate wind speed.
 
@@ -415,9 +397,7 @@ def validate_wind_speed(
     )
 
 
-def validate_pressure(
-    value,
-):
+def validate_pressure(value):
     """
     Validate atmospheric pressure.
     """
@@ -430,9 +410,7 @@ def validate_pressure(
     )
 
 
-def validate_humidity(
-    value,
-):
+def validate_humidity(value):
     """
     Validate humidity percentage.
     """
@@ -445,9 +423,7 @@ def validate_humidity(
     )
 
 
-def validate_visibility(
-    value,
-):
+def validate_visibility(value):
     """
     Validate visibility.
 
@@ -456,55 +432,38 @@ def validate_visibility(
     """
 
     try:
-
         normalized_value = float(value)
 
-    except (
-        TypeError,
-        ValueError,
-    ) as error:
-
+    except (TypeError, ValueError) as error:
         raise ValueError("Visibility must be a number.") from error
 
     if normalized_value <= 0:
-
         raise ValueError("Visibility must be greater than 0.")
 
     if normalized_value > MAX_VISIBILITY:
-
         raise ValueError(f"Visibility must be between " f"0 and {MAX_VISIBILITY}.")
 
     return normalized_value
 
 
-def validate_weather_factor(
-    value,
-):
+def validate_weather_factor(value):
     """
     Validate weather factor.
     """
 
     try:
-
         normalized_value = float(value)
 
-    except (
-        TypeError,
-        ValueError,
-    ) as error:
-
+    except (TypeError, ValueError) as error:
         raise ValueError("Weather factor must be a number.") from error
 
     if normalized_value < MIN_WEATHER_FACTOR:
-
         raise ValueError("Weather factor cannot be below " f"{MIN_WEATHER_FACTOR}.")
 
     return normalized_value
 
 
-def validate_wind_direction(
-    value,
-):
+def validate_wind_direction(value):
     """
     Validate a wind-direction value.
 
@@ -514,11 +473,9 @@ def validate_wind_direction(
     """
 
     if value in WIND_DIRECTIONS:
-
         return WIND_DIRECTIONS[value]
 
     if value in WIND_DIRECTIONS.values():
-
         return value
 
     raise ValueError("Invalid wind direction.")
@@ -539,19 +496,16 @@ def get_wind_direction():
         print("\nWind Direction")
 
         for key, value in WIND_DIRECTIONS.items():
-
             print(f"{key}. {value}")
 
         choice = input("\nChoose Direction: ").strip()
 
         try:
-
             return validate_wind_direction(
                 choice,
             )
 
         except ValueError:
-
             print("Invalid choice.")
 
 
@@ -563,7 +517,6 @@ def get_temperature():
     while True:
 
         try:
-
             value = float(input("Temperature (°C): ").strip())
 
             return validate_temperature(
@@ -571,7 +524,6 @@ def get_temperature():
             )
 
         except ValueError as error:
-
             print(error)
 
 
@@ -583,7 +535,6 @@ def get_wind_speed():
     while True:
 
         try:
-
             value = float(input("Wind Speed (km/h): ").strip())
 
             return validate_wind_speed(
@@ -591,7 +542,6 @@ def get_wind_speed():
             )
 
         except ValueError as error:
-
             print(error)
 
 
@@ -603,7 +553,6 @@ def get_pressure():
     while True:
 
         try:
-
             value = float(input("Pressure (hPa): ").strip())
 
             return validate_pressure(
@@ -611,7 +560,6 @@ def get_pressure():
             )
 
         except ValueError as error:
-
             print(error)
 
 
@@ -623,7 +571,6 @@ def get_visibility():
     while True:
 
         try:
-
             value = float(input("Visibility (km): ").strip())
 
             return validate_visibility(
@@ -631,7 +578,6 @@ def get_visibility():
             )
 
         except ValueError as error:
-
             print(error)
 
 
@@ -643,7 +589,6 @@ def get_humidity():
     while True:
 
         try:
-
             value = float(input("Humidity (%): ").strip())
 
             return validate_humidity(
@@ -651,8 +596,242 @@ def get_humidity():
             )
 
         except ValueError as error:
-
             print(error)
+
+
+# ==========================================================
+# RUNWAY VALIDATION — VERSION 5
+# ==========================================================
+
+
+def validate_airport_elevation(value):
+    """
+    Validate airport/runway elevation in meters.
+
+    Elevation may be zero for airports at sea level.
+
+    Returns
+    -------
+    float
+        Validated elevation in meters.
+    """
+
+    return validate_non_negative_value(
+        value,
+        "Airport elevation",
+    )
+
+
+def validate_runway_length(value):
+    """
+    Validate runway length in meters.
+
+    Runway length must be greater than zero.
+
+    Returns
+    -------
+    float
+        Validated runway length in meters.
+    """
+
+    return validate_positive_value(
+        value,
+        "Runway length",
+    )
+
+
+def validate_runway_surface(value):
+    """
+    Validate and normalize runway surface.
+
+    Supported surfaces correspond to the
+    Version 5 performance service.
+
+    Returns
+    -------
+    str
+        Normalized runway surface.
+    """
+
+    if not isinstance(
+        value,
+        str,
+    ):
+        raise ValueError("Runway surface must be a string.")
+
+    normalized_surface = value.strip().lower()
+
+    allowed_surfaces = {
+        "asphalt",
+        "concrete",
+        "grass",
+        "gravel",
+        "wet",
+    }
+
+    if normalized_surface not in allowed_surfaces:
+        raise ValueError(
+            "Unsupported runway surface. "
+            "Allowed surfaces: "
+            "asphalt, concrete, grass, gravel, wet."
+        )
+
+    return normalized_surface
+
+
+def validate_runway_id(value):
+    """
+    Validate a runway identifier.
+
+    Examples:
+        09/27
+        18/36
+        12L/30R
+    """
+
+    if not isinstance(
+        value,
+        str,
+    ):
+        raise ValueError("Runway ID must be a string.")
+
+    normalized_value = value.strip().upper()
+
+    if not normalized_value:
+        raise ValueError("Runway ID cannot be empty.")
+
+    if len(normalized_value) > 20:
+        raise ValueError("Runway ID is too long.")
+
+    return normalized_value
+
+
+def validate_runway_airport_code(value):
+    """
+    Validate an airport code associated
+    with a runway.
+
+    The V5 runway model uses airport codes
+    as the primary airport reference.
+    """
+
+    if not isinstance(
+        value,
+        str,
+    ):
+        raise ValueError("Airport code must be a string.")
+
+    normalized_code = value.strip().upper()
+
+    if not normalized_code:
+        raise ValueError("Airport code cannot be empty.")
+
+    if not re.fullmatch(
+        r"[A-Z0-9]{3,4}",
+        normalized_code,
+    ):
+        raise ValueError("Airport code must contain " "3 or 4 letters/numbers.")
+
+    return normalized_code
+
+
+# ==========================================================
+# RUNWAY PERFORMANCE VALIDATION
+# ==========================================================
+
+
+def validate_takeoff_distance(value):
+    """
+    Validate a base/reference takeoff distance.
+
+    Returns
+    -------
+    float
+        Validated distance in meters.
+    """
+
+    return validate_positive_value(
+        value,
+        "Base takeoff distance",
+    )
+
+
+def validate_landing_distance(value):
+    """
+    Validate a base/reference landing distance.
+
+    Returns
+    -------
+    float
+        Validated distance in meters.
+    """
+
+    return validate_positive_value(
+        value,
+        "Base landing distance",
+    )
+
+
+def validate_aircraft_weight(value):
+    """
+    Validate aircraft weight in kilograms.
+
+    Returns
+    -------
+    float
+        Validated aircraft weight.
+    """
+
+    return validate_positive_value(
+        value,
+        "Aircraft weight",
+    )
+
+
+def validate_reference_weight(value):
+    """
+    Validate reference aircraft weight
+    in kilograms.
+
+    Returns
+    -------
+    float
+        Validated reference weight.
+    """
+
+    return validate_positive_value(
+        value,
+        "Reference weight",
+    )
+
+
+def validate_runway_performance_inputs(
+    runway_length,
+    elevation,
+    surface,
+):
+    """
+    Validate the core runway-performance inputs.
+
+    This helper does not perform calculations.
+
+    Returns
+    -------
+    dict
+        Normalized runway performance values.
+    """
+
+    return {
+        "runway_length": validate_runway_length(
+            runway_length,
+        ),
+        "elevation": validate_airport_elevation(
+            elevation,
+        ),
+        "surface": validate_runway_surface(
+            surface,
+        ),
+    }
 
 
 # ==========================================================
@@ -684,7 +863,6 @@ def get_input(
     value = input(prompt).strip()
 
     if upper:
-
         value = value.upper()
 
     return value

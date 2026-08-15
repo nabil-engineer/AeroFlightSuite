@@ -14,14 +14,16 @@ Responsible for:
 """
 
 import sqlite3
+from contextlib import nullcontext
 
 from .common import get_connection
+from data.runway_data import runways as RUNWAY_REFERENCE_DATA
 
 # ==========================================================
 # DATABASE SCHEMA VERSION
 # ==========================================================
 
-CURRENT_SCHEMA_VERSION = 4
+CURRENT_SCHEMA_VERSION = 5
 
 
 # ==========================================================
@@ -206,6 +208,18 @@ def create_database():
             cursor.execute("PRAGMA user_version = 4")
 
         # ==================================================
+        # VERSION 5
+        # ==================================================
+
+        if current_version < 5:
+
+            _migrate_to_version_5(cursor)
+
+            current_version = 5
+
+            cursor.execute("PRAGMA user_version = 5")
+
+        # ==================================================
         # PHYSICAL SCHEMA VERIFICATION
         # ==================================================
         #
@@ -236,6 +250,22 @@ def create_database():
         # ==================================================
 
         _create_indexes(cursor)
+
+        # ==================================================
+        # VERSION 5 RUNWAY REFERENCE DATA
+        # ==================================================
+        #
+        # Synchronize the static runway reference dataset
+        # with the SQLite runway table.
+        #
+        # Missing reference runways are inserted.
+        #
+        # Existing database runways are preserved.
+        #
+        # This operation is intentionally idempotent.
+        # ==================================================
+
+        _seed_runway_reference_data(cursor)
 
         # ==================================================
         # FINAL VERSION CHECKPOINT
@@ -848,6 +878,227 @@ def _migrate_to_version_4(cursor):
 
 
 # ==========================================================
+# VERSION 5 MIGRATION
+# ==========================================================
+
+
+def _migrate_to_version_5(cursor):
+    """
+    Migrate AeroFlight Suite V4 databases to Version 5.
+
+    Version 5 introduces the foundation for runway
+    performance management.
+
+    New tables:
+        - runways
+        - flight_runway_performance
+
+    Existing V4 flight data is preserved.
+
+    The migration is idempotent and safe to execute
+    against an already-migrated database.
+    """
+
+    # ======================================================
+    # RUNWAYS
+    # ======================================================
+    #
+    # Stores runway information independently from flights.
+    #
+    # No existing flights table data is modified here.
+    # ======================================================
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS runways (
+
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+            airport_code TEXT NOT NULL,
+
+            runway_id TEXT NOT NULL,
+
+            length REAL,
+
+            width REAL,
+
+            surface TEXT,
+
+            elevation REAL,
+
+            heading REAL,
+
+            UNIQUE (
+                airport_code,
+                runway_id
+            )
+        )
+    """)
+
+    # ======================================================
+    # FLIGHT RUNWAY PERFORMANCE
+    # ======================================================
+    #
+    # Stores runway performance calculations associated
+    # with a flight.
+    # ======================================================
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS flight_runway_performance (
+
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+            flight_id INTEGER NOT NULL,
+
+            runway_id INTEGER,
+
+            airport_code TEXT,
+
+            required_takeoff_distance REAL,
+
+            required_landing_distance REAL,
+
+            takeoff_margin REAL,
+
+            landing_margin REAL,
+
+            takeoff_status TEXT,
+
+            landing_status TEXT,
+
+            temperature REAL,
+
+            aircraft_weight REAL,
+
+            reference_weight REAL,
+
+            FOREIGN KEY (
+                flight_id
+            )
+            REFERENCES flights(id),
+
+            FOREIGN KEY (
+                runway_id
+            )
+            REFERENCES runways(id)
+        )
+    """)
+
+    # ======================================================
+    # V5 INDEXES
+    # ======================================================
+
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS
+        idx_runways_airport_code
+
+        ON runways(airport_code)
+    """)
+
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS
+        idx_runways_runway_id
+
+        ON runways(runway_id)
+    """)
+
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS
+        idx_runway_performance_flight_id
+
+        ON flight_runway_performance(flight_id)
+    """)
+
+    cursor.execute("""
+        CREATE UNIQUE INDEX IF NOT EXISTS
+        uq_runway_performance_flight_id
+
+        ON flight_runway_performance(flight_id)
+    """)
+
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS
+        idx_runway_performance_airport_code
+
+        ON flight_runway_performance(airport_code)
+    """)
+
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS
+        idx_runway_performance_runway_id
+
+        ON flight_runway_performance(runway_id)
+    """)
+
+
+# ==========================================================
+# RUNWAY INSERTION
+# ==========================================================
+
+
+def insert_runway(
+    *,
+    airport_code,
+    runway_id,
+    length,
+    width=None,
+    surface=None,
+    elevation=None,
+    heading=None,
+):
+    """Insert or update one runway reference record."""
+
+    if not airport_code:
+        raise ValueError("Airport code is required.")
+
+    if not runway_id:
+        raise ValueError("Runway ID is required.")
+
+    if length is None:
+        raise ValueError("Runway length is required.")
+
+    try:
+        normalized_length = float(length)
+    except (TypeError, ValueError) as error:
+        raise ValueError("Runway length must be numeric.") from error
+
+    if normalized_length <= 0:
+        raise ValueError("Runway length must be greater than zero.")
+
+    with get_connection() as connection:
+        cursor = connection.cursor()
+        cursor.execute(
+            """
+            INSERT INTO runways (
+                airport_code,
+                runway_id,
+                length,
+                width,
+                surface,
+                elevation,
+                heading
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(airport_code, runway_id) DO UPDATE SET
+                length = excluded.length,
+                width = excluded.width,
+                surface = excluded.surface,
+                elevation = excluded.elevation,
+                heading = excluded.heading
+        """,
+            (
+                str(airport_code).strip().upper(),
+                str(runway_id).strip().upper(),
+                normalized_length,
+                width,
+                str(surface).strip() if surface is not None else None,
+                elevation,
+                heading,
+            ),
+        )
+        return cursor.rowcount
+
+
+# ==========================================================
 # LEGACY DATA MIGRATION
 # ==========================================================
 
@@ -1396,7 +1647,94 @@ def _create_indexes(cursor):
 
         CREATE INDEX IF NOT EXISTS idx_weather_factor
         ON flights(weather_factor);
+
+        CREATE INDEX IF NOT EXISTS idx_runways_airport_code
+        ON runways(airport_code);
+
+        CREATE INDEX IF NOT EXISTS idx_runways_runway_id
+        ON runways(runway_id);
+
+        CREATE INDEX IF NOT EXISTS idx_runway_performance_flight_id
+        ON flight_runway_performance(flight_id);
+
+        CREATE UNIQUE INDEX IF NOT EXISTS uq_runway_performance_flight_id
+        ON flight_runway_performance(flight_id);
+
+        CREATE INDEX IF NOT EXISTS idx_runway_performance_airport_code
+        ON flight_runway_performance(airport_code);
+
+        CREATE INDEX IF NOT EXISTS idx_runway_performance_runway_id
+        ON flight_runway_performance(runway_id);
         """)
+
+
+# ==========================================================
+# VERSION 5 RUNWAY REFERENCE SEEDING
+# ==========================================================
+
+
+def _seed_runway_reference_data(cursor):
+    """
+    Seed the SQLite runway reference table from the
+    static Version 5 runway dataset.
+
+    Only missing runways are inserted.
+
+    Existing database runway records are preserved so
+    manually maintained or previously persisted runway
+    data is never overwritten.
+
+    The operation is idempotent and therefore safe to
+    execute every time the database is initialized.
+
+    Parameters
+    ----------
+    cursor : sqlite3.Cursor
+        Active database cursor.
+    """
+
+    for airport_code, airport_runways in RUNWAY_REFERENCE_DATA.items():
+
+        normalized_airport_code = str(airport_code).strip().upper()
+
+        if not normalized_airport_code:
+            continue
+
+        for runway in airport_runways:
+
+            runway_id = runway.get("runway_id")
+
+            if runway_id is None:
+                continue
+
+            normalized_runway_id = str(runway_id).strip().upper()
+
+            if not normalized_runway_id:
+                continue
+
+            cursor.execute(
+                """
+                INSERT OR IGNORE INTO runways (
+                    airport_code,
+                    runway_id,
+                    length,
+                    width,
+                    surface,
+                    elevation,
+                    heading
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    normalized_airport_code,
+                    normalized_runway_id,
+                    runway.get("length"),
+                    runway.get("width"),
+                    runway.get("surface"),
+                    runway.get("elevation"),
+                    runway.get("heading"),
+                ),
+            )
 
 
 # ==========================================================
@@ -1406,6 +1744,7 @@ def _create_indexes(cursor):
 
 def insert_flight(
     *,
+    connection=None,
     flight_number,
     flight_date,
     pilot,
@@ -1487,7 +1826,9 @@ def insert_flight(
 
         legacy_fuel_consumption = normalized_fuel_needed
 
-        with get_connection() as connection:
+        with (
+            nullcontext(connection) if connection is not None else get_connection()
+        ) as connection:
 
             cursor = connection.cursor()
 

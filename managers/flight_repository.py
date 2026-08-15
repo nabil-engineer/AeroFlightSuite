@@ -4,9 +4,16 @@ Flight Repository
 
 Persistence gateway for Flight-related operations.
 
+Version 5.0
+
+The repository is the persistence boundary between
+application managers and the database layer.
+
+V5 adds Runway Performance integration while keeping
+all V4 flight operations backward compatible.
+
 Architecture
 ------------
-
 Core / Managers
         ↓
 Flight Repository
@@ -15,18 +22,16 @@ Database Manager
         ↓
 SQLite
 
-The repository is the boundary between the
-application layer and the SQLite database.
-
-SQLite rows are normalized here so upper layers
-do not depend on sqlite3.Row.
-
-Canonical domain field:
-    fuel_needed
-
-Legacy compatibility field:
-    fuel_consumption
+Runway Performance
+        ↓
+Runway Repository
+        ↓
+Database Manager
+        ↓
+SQLite
 """
+
+from database.common import get_connection
 
 from database.database_manager import (
     flight_exists as db_flight_exists,
@@ -43,6 +48,7 @@ from database.database_manager import (
     get_all_flights as db_get_all_flights,
     get_statistics as db_get_statistics,
     backup_database as db_backup_database,
+    save_runway_performance as db_save_runway_performance,
 )
 
 # ============================================================
@@ -75,21 +81,6 @@ __all__ = (
 def _rows_to_dicts(rows):
     """
     Convert database result rows into dictionaries.
-
-    The database layer may return sqlite3.Row objects.
-
-    The repository converts them into normal dictionaries
-    before exposing them to application layers.
-
-    Parameters
-    ----------
-    rows : iterable
-        Database result rows.
-
-    Returns
-    -------
-    list[dict]
-        Normalized records.
     """
 
     if not rows:
@@ -100,11 +91,9 @@ def _rows_to_dicts(rows):
     for row in rows:
 
         if isinstance(row, dict):
-
-            normalized_rows.append(row)
+            normalized_rows.append(dict(row))
 
         else:
-
             normalized_rows.append(dict(row))
 
     return normalized_rows
@@ -113,22 +102,13 @@ def _rows_to_dicts(rows):
 def _row_to_dict(row):
     """
     Convert a single database row into a dictionary.
-
-    Parameters
-    ----------
-    row : sqlite3.Row | dict | None
-
-    Returns
-    -------
-    dict | None
-        Normalized record.
     """
 
     if row is None:
         return None
 
     if isinstance(row, dict):
-        return row
+        return dict(row)
 
     return dict(row)
 
@@ -141,20 +121,9 @@ def _row_to_dict(row):
 def exists(flight_number):
     """
     Check whether a flight number already exists.
-
-    Parameters
-    ----------
-    flight_number : str
-
-    Returns
-    -------
-    bool
     """
 
-    if not isinstance(
-        flight_number,
-        str,
-    ):
+    if not isinstance(flight_number, str):
         return False
 
     normalized_flight_number = flight_number.strip().upper()
@@ -174,16 +143,13 @@ def exists(flight_number):
 
 def save(flight):
     """
-    Persist a complete Flight domain object.
+    Persist a complete Flight domain object atomically.
 
-    Parameters
-    ----------
-    flight : Flight
-
-    Returns
-    -------
-    Any
-        Result returned by the database insert operation.
+    Version 5
+    ---------
+    The Flight row and its optional runway-performance row are
+    written through the same SQLite connection. If either write
+    fails, the complete operation is rolled back.
     """
 
     if flight is None:
@@ -191,57 +157,64 @@ def save(flight):
 
     weather = flight.weather_data()
 
-    return db_insert_flight(
-        flight_number=flight.flight_number,
-        flight_date=flight.flight_date,
-        pilot=flight.pilot,
-        manufacturer=flight.manufacturer,
-        model=flight.model,
-        departure_code=flight.departure_code,
-        departure_city=flight.departure_city,
-        arrival_code=flight.arrival_code,
-        arrival_city=flight.arrival_city,
-        distance=flight.distance,
-        speed=flight.speed,
-        fuel_price=flight.fuel_price,
-        flight_time=flight.flight_time,
-        fuel_needed=flight.fuel_needed,
-        fuel_cost=flight.fuel_cost,
-        status=flight.status,
-        wind_speed=weather.get(
-            "wind_speed",
-            0,
-        ),
-        wind_direction=weather.get(
-            "wind_direction",
-            "",
-        ),
-        temperature=weather.get(
-            "temperature",
-            0,
-        ),
-        pressure=weather.get(
-            "pressure",
-            0,
-        ),
-        humidity=weather.get(
-            "humidity",
-            0,
-        ),
-        visibility=weather.get(
-            "visibility",
-            0,
-        ),
-        weather_condition=weather.get(
-            "condition",
-            "",
-        ),
-        weather_severity=weather.get(
-            "severity",
-            "",
-        ),
-        weather_factor=flight.weather_factor,
-    )
+    runway = getattr(flight, "runway", None)
+    runway_performance = getattr(flight, "runway_performance", None)
+
+    with get_connection() as connection:
+        flight_id = db_insert_flight(
+            connection=connection,
+            flight_number=flight.flight_number,
+            flight_date=flight.flight_date,
+            pilot=flight.pilot,
+            manufacturer=flight.manufacturer,
+            model=flight.model,
+            departure_code=flight.departure_code,
+            departure_city=flight.departure_city,
+            arrival_code=flight.arrival_code,
+            arrival_city=flight.arrival_city,
+            distance=flight.distance,
+            speed=flight.speed,
+            fuel_price=flight.fuel_price,
+            flight_time=flight.flight_time,
+            fuel_needed=flight.fuel_needed,
+            fuel_cost=flight.fuel_cost,
+            status=flight.status,
+            wind_speed=weather.get("wind_speed", 0),
+            wind_direction=weather.get("wind_direction", ""),
+            temperature=weather.get("temperature", 0),
+            pressure=weather.get("pressure", 0),
+            humidity=weather.get("humidity", 0),
+            visibility=weather.get("visibility", 0),
+            weather_condition=weather.get("condition", ""),
+            weather_severity=weather.get("severity", ""),
+            weather_factor=flight.weather_factor,
+        )
+
+        if runway is not None and runway_performance:
+            db_save_runway_performance(
+                flight_number=str(flight.flight_number).strip(),
+                airport_code=str(runway.airport_code).strip().upper(),
+                runway_id=str(runway.runway_id).strip().upper(),
+                required_takeoff_distance=runway_performance[
+                    "required_takeoff_distance"
+                ],
+                required_landing_distance=runway_performance[
+                    "required_landing_distance"
+                ],
+                takeoff_margin=runway_performance["takeoff_margin"],
+                landing_margin=runway_performance["landing_margin"],
+                takeoff_status=runway_performance["takeoff_status"],
+                landing_status=runway_performance["landing_status"],
+                temperature=runway_performance.get(
+                    "temperature",
+                    weather.get("temperature", 15.0),
+                ),
+                aircraft_weight=runway_performance.get("aircraft_weight"),
+                reference_weight=runway_performance.get("reference_weight"),
+                connection=connection,
+            )
+
+        return flight_id
 
 
 # ============================================================
@@ -253,14 +226,8 @@ def delete(flight_number):
     """
     Delete a flight by flight number.
 
-    Parameters
-    ----------
-    flight_number : str
-
-    Returns
-    -------
-    int
-        Number of affected rows.
+    Performance deletion is handled by the database
+    relationship defined in V5.
     """
 
     if not flight_number:
@@ -282,19 +249,6 @@ def update_status(
 ):
     """
     Update the status of a flight.
-
-    This is the repository-level gateway for
-    database status updates.
-
-    Parameters
-    ----------
-    flight_number : str
-    status : str
-
-    Returns
-    -------
-    int
-        Number of affected rows.
     """
 
     if not flight_number:
@@ -327,26 +281,7 @@ def update_weather(
     weather_severity,
 ):
     """
-    Update the complete weather information
-    of an existing flight.
-
-    Parameters
-    ----------
-    flight_number : str
-    weather_factor : float
-    wind_speed : float
-    wind_direction : str
-    temperature : float
-    pressure : float
-    humidity : float
-    visibility : float
-    weather_condition : str
-    weather_severity : str
-
-    Returns
-    -------
-    int
-        Number of affected rows.
+    Update complete weather information.
     """
 
     if not flight_number:
@@ -376,17 +311,7 @@ def update_flight_cost(
     fuel_cost,
 ):
     """
-    Update the fuel cost of an existing flight.
-
-    Parameters
-    ----------
-    flight_number : str
-    fuel_cost : float
-
-    Returns
-    -------
-    int
-        Number of affected rows.
+    Update fuel cost.
     """
 
     if not flight_number:
@@ -408,17 +333,7 @@ def update_distance(
     distance,
 ):
     """
-    Update the distance of an existing flight.
-
-    Parameters
-    ----------
-    flight_number : str
-    distance : float
-
-    Returns
-    -------
-    int
-        Number of affected rows.
+    Update flight distance.
     """
 
     if not flight_number:
@@ -438,9 +353,6 @@ def update_distance(
 def get_all():
     """
     Return all stored flights as dictionaries.
-
-    Database rows are normalized at the repository
-    boundary.
     """
 
     rows = db_get_all_flights()
@@ -457,22 +369,7 @@ def get_all():
 
 def get_statistics():
     """
-    Return aggregate flight statistics as a dictionary.
-
-    Returns
-    -------
-    dict
-        Normalized aggregate statistics.
-
-    Example
-    -------
-    {
-        "total_flights": 9,
-        "total_distance": 21681.73,
-        "total_flight_time": 25.95,
-        "total_fuel": 110512.39,
-        "total_cost": 361922.879
-    }
+    Return aggregate flight statistics.
     """
 
     row = db_get_statistics()
@@ -482,7 +379,6 @@ def get_statistics():
     )
 
     if statistics is None:
-
         return {
             "total_flights": 0,
             "total_distance": 0,
@@ -528,8 +424,6 @@ def get_statistics():
 def search(keyword):
     """
     Search flights using a global keyword.
-
-    Database rows are normalized into dictionaries.
     """
 
     rows = db_search_flights(
@@ -554,9 +448,6 @@ def advanced_search(
 ):
     """
     Perform an advanced flight search.
-
-    Empty filters are normalized before reaching
-    the database layer.
     """
 
     rows = db_advanced_search(
@@ -581,9 +472,7 @@ def filter_by(
     value,
 ):
     """
-    Filter flights using the database filter operation.
-
-    Returns normalized dictionaries.
+    Filter flights.
     """
 
     rows = db_filter_flights(
@@ -603,9 +492,7 @@ def filter_by(
 
 def sort_by(sort_type):
     """
-    Sort flights using the database sort operation.
-
-    Returns normalized dictionaries.
+    Sort flights.
     """
 
     rows = db_sort_flights(
@@ -625,11 +512,6 @@ def sort_by(sort_type):
 def backup():
     """
     Create a database backup.
-
-    Returns
-    -------
-    Any
-        Backup path returned by the database layer.
     """
 
     return db_backup_database()

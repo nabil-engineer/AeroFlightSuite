@@ -27,6 +27,12 @@ def get_connection():
         DATABASE_FILE,
     )
 
+    # SQLite disables foreign-key enforcement by default for each
+    # new connection. AeroFlight Suite V5 relies on the declared
+    # relationships between flights, runways, and runway performance,
+    # so enforcement must be enabled on EVERY connection.
+    connection.execute("PRAGMA foreign_keys = ON")
+
     connection.row_factory = sqlite3.Row
 
     return connection

@@ -8,7 +8,7 @@
 
 AeroFlight Suite is a professional Python-based flight management system designed to simulate and manage flight operations through a clean, modular, and maintainable architecture.
 
-The system integrates flight management, airport and aircraft databases, route calculation, fuel analysis, weather intelligence, flight search, filtering, sorting, statistics, and SQLite persistence.
+The system integrates flight management, aircraft and airport databases, route calculation, fuel analysis, weather intelligence, runway reference data, runway performance analysis, flight search, filtering, sorting, statistics, and SQLite persistence.
 
 The application enables users to:
 
@@ -21,7 +21,9 @@ The application enables users to:
 - Calculate fuel costs.
 - Analyze weather conditions and their impact on flights.
 - Calculate weather severity and weather factors.
+- Analyze runway takeoff and landing performance, margins, and sufficiency.
 - Store flight records in a SQLite database.
+- Persist runway performance results.
 - Search and filter stored flights.
 - Perform advanced flight searches.
 - Sort flight records.
@@ -33,7 +35,9 @@ The application enables users to:
 - Generate professional flight reports.
 - Search aircraft by manufacturer or model.
 - Search airports by IATA code or city.
+- Manage runway reference data.
 - Create safe SQLite database backups.
+- Maintain compatibility with previous application versions.
 
 ---
 
@@ -89,6 +93,26 @@ The application enables users to:
 - ✔ Search by City
 - ✔ Manufacturer & Aircraft Model Information
 
+🛬 Runway Performance
+
+- ✔ Runway Reference Data Synchronization
+- ✔ Runway Selection by Airport
+- ✔ Runway Length
+- ✔ Runway Surface
+- ✔ Airport Elevation
+- ✔ Aircraft Reference Weight
+- ✔ Actual Aircraft Weight
+- ✔ Required Takeoff Distance
+- ✔ Required Landing Distance
+- ✔ Takeoff Margin
+- ✔ Landing Margin
+- ✔ Takeoff Sufficiency Status
+- ✔ Landing Sufficiency Status
+- ✔ Runway Performance Persistence
+- ✔ Runway Performance Retrieval
+- ✔ Runway Performance Deletion with Flight Deletion
+- ✔ Optional Runway Performance for Legacy-Compatible Flights
+
 🗺️ Route & Flight Calculations
 
 - ✔ Automatic Route Distance Calculation
@@ -122,6 +146,10 @@ The application enables users to:
 - ✔ Safe SQLite Database Backups
 - ✔ Absolute Database Paths
 - ✔ Absolute Backup Paths
+- ✔ SQLite Native Backup API
+- ✔ Legacy Data Compatibility
+- ✔ Runway Reference Data Synchronization
+- ✔ Runway Performance Persistence
 
 🔎 Search & Filtering
 
@@ -139,15 +167,19 @@ The application enables users to:
 - ✔ Input Validation
 - ✔ Centralized Error Handling
 - ✔ Database Error Handling
+- ✔ Versioned Database Migrations
 - ✔ Modular Architecture
 - ✔ Python Compilation Checks
 - ✔ Testing Infrastructure
+- ✔ V4/V5 Compatibility Testing
+- ✔ Runway Performance Persistence Testing
+- ✔ Runway Performance Deletion Testing
 
 ---
 
 ## 🛠 Technologies
 
-- Python 3
+- Python 3.13
 - SQLite3
 - Python Standard Library
 - Object-Oriented Programming (OOP)
@@ -174,6 +206,11 @@ AeroFlightSuite/
 │   ├── menu.py
 │   └── statistics.py
 │
+├── data/
+│   ├── aircraft_data.py
+│   ├── airport_data.py
+│   └── runway_data.py
+│
 ├── database/
 │   ├── __init__.py
 │   ├── backup_manager.py
@@ -182,29 +219,31 @@ AeroFlightSuite/
 │   ├── delete_queries.py
 │   ├── read_queries.py
 │   ├── update_queries.py
-│   └── database_manager.py
-│
-├── data/
-│   ├── aircraft_data.py
-│   └── airport_data.py
+│   ├── database_manager.py
+│   └── aeroflight.db
 │
 ├── managers/
 │   ├── delete_manager.py
-│   ├── file_manager.py
 │   ├── flight_manager.py
 │   ├── flight_repository.py
+│   ├── runway_repository.py
 │   ├── search_manager.py
 │   └── status_manager.py
 │
 ├── models/
-│   └── flight_model.py
+│   ├── flight_model.py
+│   ├── runway_model.py
+│   └── weather_model.py
 │
 ├── services/
-│   └── flight_service.py
+│   ├── flight_service.py
+│   ├── runway_service.py
+│   └── weather_service.py
 │
 ├── utils/
 │   ├── calculator.py
 │   ├── display.py
+│   ├── error_handler.py
 │   ├── logger.py
 │   ├── route_calculator.py
 │   └── validation.py
@@ -217,12 +256,9 @@ AeroFlightSuite/
 │   ├── new-flight.png
 │   └── statistics.png
 │
-├── database/
-│   └── aeroflight.db
-│
 ├── backups/
 │
-├── tests/
+├── logs/
 │
 ├── main.py
 ├── README.md
@@ -283,15 +319,16 @@ python main.py
 
 ## 🚀 Future Improvements
 
-- Export Flight Reports to PDF
-- Export Flight Data to Excel
 - Professional Graphical User Interface (Tkinter)
 - Interactive Dashboard
+- Icons & Images
 - Charts & Analytics
+- Export Flight Reports to PDF
+- Export Flight Data to Excel
 - Web Version (Flask)
 - User Authentication & Login System
 - REST API
-- Weather API Integration
+- External Weather API Integration
 - Interactive Airport Maps
 - Docker Deployment
 - AI Flight Assistant
@@ -337,7 +374,7 @@ python main.py
 - Advanced Flight Search
 - Flight Filtering
 - Flight Sorting
-- Database Backup 
+- Database Backup
 - Data Validation Improvements
 
 ---
@@ -367,24 +404,52 @@ python main.py
 
 ---
 
-### 🔄 Version 5.0 — Runway Performance + Professional Desktop GUI
+### ✅ Version 5.0 — Runway Performance
 
 #### Runway Performance
+
+- Runway Reference Data
+- Runway Selection by Airport
 - Required Takeoff Distance
-- Landing Distance
+- Required Landing Distance
 - Airport Elevation
 - Runway Length
+- Runway Surface
+- Aircraft Reference Weight
+- Actual Aircraft Weight
+- Takeoff & Landing Margins
+- Takeoff & Landing Sufficiency Analysis
+- Performance Persistence
+- Optional Runway Performance for Legacy-Compatible Flights
 
-#### Professional Desktop GUI
-- Tkinter User Interface
-- Dashboard
-- Icons & Images
-- Charts & Analytics
-- Improved User Experience
+#### Database Improvements
+- Schema Version 5
+- Version 5 Migration
+- Runway Reference Data Synchronization
+- Runway Performance Database Table
+- Persistent `flight_runway_performance` Records
+- Safe Performance Cleanup on Flight Deletion
 
 ---
 
-### 🔄 Version 6.0 — Aircraft Maintenance + Web Application
+### 🔄 Version 6.0 — Professional Desktop GUI
+
+- Professional Tkinter Desktop Interface
+- Dashboard & Navigation System
+- Flight, Aircraft & Airport Management
+- Runway Performance & Weather Interfaces
+- Flight History, Search & Filtering
+- Interactive Forms & Data Tables
+- Input Validation & Error Handling
+- Flight, Fuel & Performance Analytics
+- Charts & Data Visualization
+- GUI Integration with Existing Architecture
+- Reuse of Existing Models, Services & Database
+- CLI Compatibility
+
+---
+
+### 🔄 Version 7.0 — Aircraft Maintenance + Web Application
 
 #### Aircraft Maintenance
 - Aircraft Maintenance Records
@@ -392,16 +457,18 @@ python main.py
 - Engine Hours
 - Maintenance Alerts
 - Maintenance History
+- Maintenance Status Tracking
 
 #### Web Application
 - Flask Web Application
 - Responsive Interface
 - User Authentication
 - REST API
+- Web-based Flight Management
 
 ---
 
-### 🔄 Version 7.0 — Airport Management + Aviation Services
+### 🔄 Version 8.0 — Airport Management + Aviation Services
 
 #### Airport Management
 - Gates
@@ -415,10 +482,11 @@ python main.py
 - Interactive Airport Maps
 - PDF Flight Reports
 - Excel Export
+- Aviation Data Services
 
 ---
 
-### 🔄 Version 8.0 — Flight Analytics
+### 🔄 Version 9.0 — Flight Analytics
 
 - Flight Analytics
 - Charts & Statistics
@@ -429,7 +497,9 @@ python main.py
 
 ---
 
-### 🔄 Version 9.0 — Advanced Web Application
+### 🔄 Version 10.0 — Advanced Web Application & Artificial Intelligence
+
+#### Advanced Web Platform
 
 - Advanced Flask Architecture
 - Advanced REST API
@@ -437,10 +507,12 @@ python main.py
 - Advanced Flight Management
 - Web-based Analytics
 - Real-time Flight Data
+- Advanced Database Architecture
+- Web-based Dashboard
+- Flight & Aircraft Management
+- Airport & Runway Management
 
----
-
-### 🔄 Version 10.0 — Artificial Intelligence
+#### Artificial Intelligence
 
 - AI Flight Assistant
 - Fuel Consumption Prediction
@@ -448,6 +520,8 @@ python main.py
 - Flight Data Analysis
 - Predictive Maintenance
 - Flight Performance Prediction
+- Machine Learning Integration
+- Intelligent Aviation Decision Support
 
 ---
 

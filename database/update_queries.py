@@ -7,12 +7,12 @@ flight records.
 """
 
 from .common import execute_query
-
 from .queries import (
     UPDATE_STATUS,
     UPDATE_DISTANCE,
     UPDATE_FUEL_COST,
     UPDATE_WEATHER,
+    UPSERT_RUNWAY_PERFORMANCE,
 )
 
 
@@ -188,4 +188,73 @@ def update_distance(
             distance,
             str(flight_number).strip(),
         ),
+    )
+
+
+# ==========================================================
+# SAVE / UPDATE RUNWAY PERFORMANCE
+# ==========================================================
+
+
+def save_runway_performance(
+    flight_number,
+    airport_code,
+    runway_id,
+    required_takeoff_distance,
+    required_landing_distance,
+    takeoff_margin,
+    landing_margin,
+    takeoff_status,
+    landing_status,
+    temperature,
+    aircraft_weight=None,
+    reference_weight=None,
+    connection=None,
+):
+    """
+    Insert or update runway performance for one flight.
+
+    Version 5 stores runway performance in the dedicated
+    ``flight_runway_performance`` table rather than in
+    ``flights``.
+
+    Returns
+    -------
+    int
+        Number of affected rows.
+    """
+
+    if not flight_number:
+        raise ValueError("Flight number is required.")
+
+    if not airport_code:
+        raise ValueError("Airport code is required.")
+
+    if not runway_id:
+        raise ValueError("Runway ID is required.")
+
+    parameters = (
+        str(flight_number).strip(),
+        str(airport_code).strip().upper(),
+        str(runway_id).strip().upper(),
+        str(airport_code).strip().upper(),
+        required_takeoff_distance,
+        required_landing_distance,
+        takeoff_margin,
+        landing_margin,
+        takeoff_status,
+        landing_status,
+        temperature,
+        aircraft_weight,
+        reference_weight,
+    )
+
+    if connection is not None:
+        cursor = connection.cursor()
+        cursor.execute(UPSERT_RUNWAY_PERFORMANCE, parameters)
+        return cursor.rowcount
+
+    return execute_query(
+        UPSERT_RUNWAY_PERFORMANCE,
+        parameters,
     )

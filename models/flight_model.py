@@ -4,9 +4,9 @@ Flight Model
 
 Domain model representing a complete flight record.
 
-The model keeps flight data, aircraft information,
-route information, fuel calculations, and weather
-intelligence in one consistent API.
+The model stores flight information, aircraft information,
+route information, fuel calculations, weather intelligence,
+and the optional Version 5 runway selection/performance report.
 
 Business calculations are handled by services.
 Database persistence is handled by repositories.
@@ -17,14 +17,7 @@ from config.config import DEFAULT_STATUS
 
 class Flight:
     """
-    Represent a complete AeroFlight flight.
-
-    The Flight model is responsible for storing domain data
-    and exposing convenient domain-level properties.
-
-    Business calculations are handled by services.
-
-    Database persistence is handled by repositories.
+    Represent a complete AeroFlight Suite flight.
     """
 
     def __init__(
@@ -47,28 +40,29 @@ class Flight:
         weather=None,
         weather_factor=1.0,
         status=DEFAULT_STATUS,
+        runway=None,
+        runway_performance=None,
     ):
-        # ==================================================
-        # Flight Information
-        # ==================================================
+        # ======================================================
+        # FLIGHT INFORMATION
+        # ======================================================
 
         self.flight_number = flight_number
         self.flight_date = flight_date
         self.pilot = pilot
         self.status = status
+        self.runway_performance = runway_performance
 
-        # ==================================================
-        # Aircraft Information
-        # ==================================================
+        # ======================================================
+        # AIRCRAFT INFORMATION
+        # ======================================================
 
         self.manufacturer = manufacturer
         self.model = model
-        self.speed = speed
-        self.fuel_price = fuel_price
 
-        # ==================================================
-        # Route Information
-        # ==================================================
+        # ======================================================
+        # ROUTE INFORMATION
+        # ======================================================
 
         self.departure_code = departure_code
         self.departure_city = departure_city
@@ -76,35 +70,39 @@ class Flight:
         self.arrival_code = arrival_code
         self.arrival_city = arrival_city
 
-        # ==================================================
-        # Flight Calculations
-        # ==================================================
+        # ======================================================
+        # FLIGHT CALCULATIONS
+        # ======================================================
 
         self.distance = distance
+        self.speed = speed
+        self.fuel_price = fuel_price
         self.flight_time = flight_time
         self.fuel_needed = fuel_needed
         self.fuel_cost = fuel_cost
 
-        # ==================================================
-        # Weather Intelligence
-        # ==================================================
+        # ======================================================
+        # WEATHER INTELLIGENCE
+        # ======================================================
 
         self.weather = weather
         self.weather_factor = weather_factor
 
-    # ======================================================
-    # Derived Properties
-    # ======================================================
+        # ======================================================
+        # VERSION 5 - RUNWAY
+        # ======================================================
+
+        self.runway = runway
+        self.runway_performance = runway_performance
+
+    # ==========================================================
+    # AIRCRAFT
+    # ==========================================================
 
     @property
     def aircraft(self):
         """
-        Return the complete aircraft name.
-
-        Examples
-        --------
-        Airbus A320
-        Boeing 777-300ER
+        Return the complete aircraft display name.
         """
 
         manufacturer = (
@@ -122,6 +120,10 @@ class Flight:
             if part
         )
 
+    # ==========================================================
+    # DEPARTURE
+    # ==========================================================
+
     @property
     def departure(self):
         """
@@ -137,9 +139,14 @@ class Flight:
         )
 
         if code and city:
+
             return f"{code} - {city}"
 
         return code or city
+
+    # ==========================================================
+    # ARRIVAL
+    # ==========================================================
 
     @property
     def arrival(self):
@@ -152,55 +159,84 @@ class Flight:
         city = str(self.arrival_city).strip() if self.arrival_city is not None else ""
 
         if code and city:
+
             return f"{code} - {city}"
 
         return code or city
 
+    # ==========================================================
+    # ROUTE
+    # ==========================================================
+
     @property
     def route(self):
         """
-        Return the complete formatted route.
+        Return the complete formatted flight route.
         """
 
-        return f"{self.departure} -> {self.arrival}"
+        return f"{self.departure} -> " f"{self.arrival}"
 
-    # ======================================================
-    # Compatibility Properties
-    # ======================================================
+    # ==========================================================
+    # FUEL COMPATIBILITY
+    # ==========================================================
 
     @property
     def fuel_consumption(self):
         """
-        Return fuel consumption using the legacy
-        compatibility name.
+        Return the legacy fuel field.
 
-        AeroFlight Suite uses ``fuel_needed`` as the
-        canonical domain field.
-
-        ``fuel_consumption`` is kept as a compatibility
-        alias for older database/statistics code.
+        ``fuel_needed`` remains the canonical
+        flight-level fuel field.
         """
 
         return self.fuel_needed
 
-    # ======================================================
-    # Weather API
-    # ======================================================
+    # ==========================================================
+    # RUNWAY
+    # ==========================================================
+
+    @property
+    def runway_id(self):
+        """
+        Return the selected runway identifier.
+        """
+
+        if self.runway is None:
+            return None
+
+        return getattr(
+            self.runway,
+            "runway_id",
+            None,
+        )
+
+    @property
+    def runway_airport_code(self):
+        """
+        Return the airport code associated
+        with the selected runway.
+        """
+
+        if self.runway is None:
+            return None
+
+        return getattr(
+            self.runway,
+            "airport_code",
+            None,
+        )
+
+    # ==========================================================
+    # WEATHER
+    # ==========================================================
 
     def weather_data(self):
         """
-        Return weather information as a dictionary.
-
-        This method provides a stable API for consumers
-        that should not depend directly on the Weather object.
-
-        Returns
-        -------
-        dict
-            Complete normalized weather information.
+        Return complete normalized weather information.
         """
 
         if self.weather is None:
+
             return {
                 "wind_speed": 0,
                 "wind_direction": "",
@@ -210,6 +246,7 @@ class Flight:
                 "visibility": 0,
                 "condition": "",
                 "severity": "",
+                "weather_factor": (self.weather_factor),
             }
 
         data = self.weather.to_dict()
@@ -253,92 +290,122 @@ class Flight:
                     "",
                 ),
             ),
+            "weather_factor": (self.weather_factor),
         }
 
-    # ======================================================
-    # Dictionary Serialization
-    # ======================================================
+    # ==========================================================
+    # SERIALIZATION
+    # ==========================================================
 
-    def to_dict(self):
+    def to_tuple(self):
         """
-        Return the complete flight as a dictionary.
+        Return the legacy flight tuple.
 
-        The dictionary provides a stable domain representation
-        for reports, exports, APIs, UI components, and other
-        consumers.
-
-        Database-specific persistence remains the
-        responsibility of repositories/database functions.
+        Version 5 runway data is deliberately excluded
+        because runway performance has its own persistence
+        contract.
         """
 
         weather = self.weather_data()
 
-        return {
-            # ------------------------------------------------
-            # Flight
-            # ------------------------------------------------
-            "flight_number": self.flight_number,
-            "flight_date": self.flight_date,
-            "pilot": self.pilot,
-            "status": self.status,
-            # ------------------------------------------------
-            # Aircraft
-            # ------------------------------------------------
-            "manufacturer": self.manufacturer,
-            "model": self.model,
-            "aircraft": self.aircraft,
-            # ------------------------------------------------
-            # Route
-            # ------------------------------------------------
-            "departure_code": self.departure_code,
-            "departure_city": self.departure_city,
-            "departure": self.departure,
-            "arrival_code": self.arrival_code,
-            "arrival_city": self.arrival_city,
-            "arrival": self.arrival,
-            "route": self.route,
-            # ------------------------------------------------
-            # Flight calculations
-            # ------------------------------------------------
-            "distance": self.distance,
-            "speed": self.speed,
-            "fuel_price": self.fuel_price,
-            "flight_time": self.flight_time,
-            "fuel_needed": self.fuel_needed,
-            # Legacy compatibility name.
-            "fuel_consumption": self.fuel_consumption,
-            "fuel_cost": self.fuel_cost,
-            # ------------------------------------------------
-            # Weather
-            # ------------------------------------------------
-            "wind_speed": weather["wind_speed"],
-            "wind_direction": weather["wind_direction"],
-            "temperature": weather["temperature"],
-            "pressure": weather["pressure"],
-            "humidity": weather["humidity"],
-            "visibility": weather["visibility"],
-            # Current domain names.
-            "condition": weather["condition"],
-            "severity": weather["severity"],
-            # Database-compatible names.
-            "weather_condition": weather["condition"],
-            "weather_severity": weather["severity"],
-            "weather_factor": self.weather_factor,
-        }
+        return (
+            self.flight_number,
+            self.flight_date,
+            self.pilot,
+            self.manufacturer,
+            self.model,
+            self.departure_code,
+            self.departure_city,
+            self.arrival_code,
+            self.arrival_city,
+            self.distance,
+            self.speed,
+            weather.get(
+                "wind_speed",
+                0,
+            ),
+            weather.get(
+                "wind_direction",
+                "",
+            ),
+            weather.get(
+                "temperature",
+                0,
+            ),
+            weather.get(
+                "pressure",
+                0,
+            ),
+            weather.get(
+                "humidity",
+                0,
+            ),
+            weather.get(
+                "visibility",
+                0,
+            ),
+            weather.get(
+                "condition",
+                "",
+            ),
+            weather.get(
+                "severity",
+                "",
+            ),
+            self.weather_factor,
+            self.fuel_price,
+            self.flight_time,
+            self.fuel_needed,
+            self.fuel_cost,
+            self.status,
+        )
 
-    # ======================================================
-    # String Representation
-    # ======================================================
+    # ==========================================================
+    # REPRESENTATION
+    # ==========================================================
 
     def __str__(self):
         """
         Return a concise human-readable representation.
         """
 
+        runway = self.runway_id or "N/A"
+
+        try:
+
+            weather_factor = f"{float(self.weather_factor):.3f}"
+
+        except (
+            TypeError,
+            ValueError,
+        ):
+
+            weather_factor = str(self.weather_factor)
+
         return (
-            f"{self.flight_number} | "
-            f"{self.aircraft} | "
+            f"{self.flight_number} - "
             f"{self.route} | "
+            f"Runway: {runway} | "
             f"Weather Factor: "
-            f"{self.weather_factor:.3f}"
+            f"{weather_factor}"
+        )
+
+    def __repr__(self):
+        """
+        Return a developer-friendly representation.
+        """
+
+        return (
+            "Flight("
+            f"flight_number={self.flight_number!r}, "
+            f"flight_date={self.flight_date!r}, "
+            f"pilot={self.pilot!r}, "
+            f"aircraft={self.aircraft!r}, "
+            f"route={self.route!r}, "
+            f"distance={self.distance!r}, "
+            f"fuel_needed={self.fuel_needed!r}, "
+            f"fuel_cost={self.fuel_cost!r}, "
+            f"status={self.status!r}, "
+            f"runway_id={self.runway_id!r}"
+            ")"
         )

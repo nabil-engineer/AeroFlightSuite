@@ -10,6 +10,7 @@ by combining the specialized query modules.
 from .create_queries import (
     create_database,
     insert_flight,
+    insert_runway,
 )
 
 from .read_queries import (
@@ -20,6 +21,10 @@ from .read_queries import (
     filter_flights,
     sort_flights,
     get_statistics,
+    get_all_runways,
+    get_runways,
+    get_runway,
+    get_runway_performance,
 )
 
 from .update_queries import (
@@ -27,6 +32,7 @@ from .update_queries import (
     update_weather,
     update_flight_cost,
     update_distance,
+    save_runway_performance,
 )
 
 from .delete_queries import (
@@ -41,6 +47,7 @@ __all__ = [
     # Create
     "create_database",
     "insert_flight",
+    "insert_runway",
     # Read
     "flight_exists",
     "get_all_flights",
@@ -49,11 +56,16 @@ __all__ = [
     "filter_flights",
     "sort_flights",
     "get_statistics",
+    "get_all_runways",
+    "get_runways",
+    "get_runway",
+    "get_runway_performance",
     # Update
     "update_status",
     "update_weather",
     "update_flight_cost",
     "update_distance",
+    "save_runway_performance",
     # Delete
     "delete_flight_database",
     # Backup

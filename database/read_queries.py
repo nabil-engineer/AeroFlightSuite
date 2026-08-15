@@ -12,6 +12,10 @@ from .common import execute_query
 from .queries import (
     GET_ALL_FLIGHTS,
     GET_STATISTICS,
+    GET_ALL_RUNWAYS,
+    GET_RUNWAYS_BY_AIRPORT,
+    GET_RUNWAY,
+    GET_RUNWAY_PERFORMANCE,
 )
 
 # ==========================================================
@@ -1078,5 +1082,83 @@ def get_statistics():
 
     return execute_query(
         GET_STATISTICS,
+        fetch_one=True,
+    )
+
+
+# ==========================================================
+# RUNWAY REFERENCE DATA
+# ==========================================================
+
+
+def get_all_runways():
+    """Return all persisted runway records."""
+
+    return execute_query(
+        GET_ALL_RUNWAYS,
+        fetch=True,
+    )
+
+
+def get_runways(airport_code):
+    """Return all persisted runways for an airport."""
+
+    if not airport_code:
+        raise ValueError("Airport code is required.")
+
+    return execute_query(
+        GET_RUNWAYS_BY_AIRPORT,
+        (str(airport_code).strip().upper(),),
+        fetch=True,
+    )
+
+
+def get_runway(airport_code, runway_id):
+    """Return one persisted runway or None."""
+
+    if not airport_code:
+        raise ValueError("Airport code is required.")
+
+    if not runway_id:
+        raise ValueError("Runway ID is required.")
+
+    return execute_query(
+        GET_RUNWAY,
+        (
+            str(airport_code).strip().upper(),
+            str(runway_id).strip().upper(),
+        ),
+        fetch_one=True,
+    )
+
+
+# ==========================================================
+# RUNWAY PERFORMANCE
+# ==========================================================
+
+
+def get_runway_performance(flight_number):
+    """
+    Retrieve runway performance for one flight.
+
+    Returns
+    -------
+    sqlite3.Row or None
+        The runway performance record associated
+        with the flight, or None when no record exists.
+
+    Notes
+    -----
+    Version 5 stores at most one runway performance
+    record per flight because ``flight_id`` is protected
+    by a UNIQUE constraint.
+    """
+
+    if not flight_number:
+        raise ValueError("Flight number is required.")
+
+    return execute_query(
+        GET_RUNWAY_PERFORMANCE,
+        (str(flight_number).strip().upper(),),
         fetch_one=True,
     )

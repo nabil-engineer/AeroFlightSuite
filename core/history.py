@@ -20,8 +20,8 @@ from utils.display import (
     display_flights_table,
 )
 
-from managers.flight_repository import (
-    get_all,
+from managers.flight_manager import (
+    get_all_flights,
 )
 
 def show_history():
@@ -37,7 +37,7 @@ def show_history():
     None
     """
 
-    flights = get_all()
+    flights = get_all_flights()
 
     print_title(
         TITLE_FLIGHT_HISTORY,
